@@ -9,18 +9,24 @@ type AccordionContextType = {
 
 const AccordionContext = React.createContext<AccordionContextType | undefined>(undefined);
 
-export const Accordion = ({
-  children,
-  type = "single",
-  defaultValue = [],
-  className,
-}: {
-  children: React.ReactNode;
-  type?: "single" | "multiple";
-  defaultValue?: string[];
-  className?: string;
-}) => {
-  const [openItems, setOpenItems] = React.useState<string[]>(defaultValue);
+type AccordionProps =
+  | {
+      children: React.ReactNode;
+      type: "single";
+      defaultValue?: string;
+      className?: string;
+    }
+  | {
+      children: React.ReactNode;
+      type: "multiple";
+      defaultValue?: string[];
+      className?: string;
+    };
+
+export const Accordion = ({ children, type, defaultValue, className }: AccordionProps) => {
+  const [openItems, setOpenItems] = React.useState<string[]>(
+    type === "multiple" ? (defaultValue ?? []) : defaultValue ? [defaultValue] : []
+  );
 
   const toggleItem = (value: string) => {
     setOpenItems(prev =>

@@ -27,6 +27,14 @@ export const PlayPage = () => {
     return grouped;
   }, [quizzes]);
 
+  const defaultSeason = useMemo(() => {
+    for (const [season, quizzes] of Object.entries(groupedBySeason)) {
+      const isComplete = quizzes.every(q => q.progress >= 100);
+      if (!isComplete) return season;
+    }
+    return Object.keys(groupedBySeason)[0];
+  }, [groupedBySeason]);
+
   const handleClick = (quizId: number) => {
     navigate(`/play/${quizId}/`);
   };
@@ -39,43 +47,53 @@ export const PlayPage = () => {
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-bold">Play Quizzes</h1>
 
-      <Accordion type="multiple" className="w-full">
-        {Object.entries(groupedBySeason).map(([season, quizzes]) => (
-          <AccordionItem key={season} value={season}>
-            <AccordionTrigger>Season {season}</AccordionTrigger>
-            <AccordionContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {quizzes
-                .sort((a, b) => a.week - b.week)
-                .map(quiz => {
-                  const isComplete = quiz.progress >= 100.0;
-                  return (
-                    <Card
-                      key={quiz.id}
-                      variant={isComplete ? "disabled" : "default"}
-                      onClick={() => {
-                        if (!isComplete) handleClick(quiz.id);
-                      }}
-                    >
-                      <CardContent className="space-y-2">
-                        <small className="text-sm text-muted-foreground">Season {quiz.season}</small>
-                        <h3 className="text-xl font-semibold">Week {quiz.week}</h3>
-                        <div className="relative">
-                          <Progress value={quiz.progress} />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-            </AccordionContent>
-          </AccordionItem>
-        ))}
+      <Accordion type="single" defaultValue={defaultSeason} className="w-full">
+        {Object.entries(groupedBySeason).map(([season, quizzes]) => {
+          const completed = quizzes.filter(q => q.progress >= 100).length;
+          const total = quizzes.length;
+
+          return (
+            <AccordionItem key={season} value={season}>
+              <AccordionTrigger>
+                Season {season} ({completed}/{total})
+              </AccordionTrigger>
+              <AccordionContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {quizzes
+                  .sort((a, b) => a.week - b.week)
+                  .map(quiz => {
+                    const isComplete = quiz.progress >= 100.0;
+                    return (
+                      <Card
+                        key={quiz.id}
+                        variant={isComplete ? "disabled" : "default"}
+                        onClick={() => {
+                          if (!isComplete) handleClick(quiz.id);
+                        }}
+                      >
+                        <CardContent className="space-y-2">
+                          <small className="text-sm text-muted-foreground">Season {quiz.season}</small>
+                          <h3 className="text-xl font-semibold">Week {quiz.week}</h3>
+                          <div className="relative">
+                            <Progress value={quiz.progress} />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+              </AccordionContent>
+            </AccordionItem>
+          );
+        })}
       </Accordion>
-      <Card className="cursor-pointer" onClick={handleRandomClick}>
-        <CardContent className="p-6">
-          <div className="text-xl font-semibold">Random</div>
-          <p className="text-muted-foreground mt-1">Play random topics</p>
-        </CardContent>
-      </Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Card className="cursor-pointer" onClick={handleRandomClick}>
+          <CardContent className="p-6">
+            <div className="text-xl font-semibold">Random</div>
+            <p className="text-muted-foreground mt-1">Play random topics</p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
