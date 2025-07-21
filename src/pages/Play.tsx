@@ -1,0 +1,90 @@
+import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "../auth/axios";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../components/ui/Accordion";
+import { Card, CardContent } from "../components/ui/Card";
+import { Progress } from "../components/ui/Progress";
+import type { QuizProgress } from "../types/quizzes";
+
+export const PlayPage = () => {
+  const navigate = useNavigate();
+
+  const { data: quizzes = [] } = useQuery<QuizProgress[]>({
+    queryKey: ["quizzes"],
+    queryFn: async () => {
+      const res = await axios.get("/quizzes/progress/");
+      return res.data;
+    },
+  });
+
+  const groupedBySeason = useMemo(() => {
+    const grouped: Record<number, QuizProgress[]> = {};
+    quizzes.forEach(quiz => {
+      if (!grouped[quiz.season]) grouped[quiz.season] = [];
+      grouped[quiz.season].push(quiz);
+    });
+    return grouped;
+  }, [quizzes]);
+
+  const handleClick = (quizId: number) => {
+    navigate(`/play/${quizId}/`);
+  };
+
+  const handleRandomClick = () => {
+    navigate("/play/random/");
+  };
+
+  return (
+    <div className="p-6 space-y-6">
+      <h1 className="text-2xl font-bold">Play Quizzes</h1>
+
+      <Accordion type="multiple" className="w-full">
+        {Object.entries(groupedBySeason).map(([season, quizzes]) => (
+          <AccordionItem key={season} value={season}>
+            <AccordionTrigger>Season {season}</AccordionTrigger>
+            <AccordionContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {quizzes
+                .sort((a, b) => a.week - b.week)
+                .map(quiz => {
+                  const isComplete = quiz.progress >= 100.0;
+                  return (
+                    <Card
+                      key={quiz.id}
+                      className={
+                        "p-2 transition-opacity " + (isComplete ? "opacity-60 cursor-not-allowed" : "cursor-pointer")
+                      }
+                      onClick={() => {
+                        if (!isComplete) handleClick(quiz.id);
+                      }}
+                    >
+                      <CardContent className="space-y-2">
+                        <small className="text-sm text-muted-foreground">Season {quiz.season}</small>
+                        <h3 className="text-xl font-semibold">Week {quiz.week}</h3>
+                        <div className="relative">
+                          <Progress value={quiz.progress} />
+                          {isComplete && (
+                            <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center text-xs font-semibold text-white">
+                              Complete!
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
+      <Card className="cursor-pointer" onClick={handleRandomClick}>
+        <CardContent className="p-6">
+          <div className="text-xl font-semibold">Random</div>
+          <p className="text-muted-foreground mt-1">Play random topics</p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default PlayPage;

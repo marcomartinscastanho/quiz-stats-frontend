@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+/* Optional: make sure root elements don't have default spacing */
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
