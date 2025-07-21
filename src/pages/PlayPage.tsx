@@ -75,6 +75,12 @@ export const PlayPage = () => {
                           <h3 className="text-xl font-semibold">Week {quiz.week}</h3>
                           <div className="relative">
                             <Progress value={quiz.progress} />
+                            <Progress
+                              width={`${quiz.progress}%`}
+                              value={quiz.correct}
+                              backgroundColor="bg-red-600"
+                              progressColor="bg-green-600"
+                            />
                           </div>
                         </CardContent>
                       </Card>
