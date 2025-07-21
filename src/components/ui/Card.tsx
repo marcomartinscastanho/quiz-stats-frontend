@@ -19,7 +19,7 @@ export const Card = ({ children, className = "", onClick, variant = "default" }:
         "bg-white rounded-xl shadow p-4 transition",
         {
           "cursor-pointer hover:shadow-md": !isDisabled,
-          "opacity-75 cursor-not-allowed": isDisabled,
+          "opacity-75 cursor-arrow": isDisabled,
         },
         className
       )}
