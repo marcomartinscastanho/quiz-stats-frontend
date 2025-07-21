@@ -51,9 +51,7 @@ export const PlayPage = () => {
                   return (
                     <Card
                       key={quiz.id}
-                      className={
-                        "p-2 transition-opacity " + (isComplete ? "opacity-60 cursor-not-allowed" : "cursor-pointer")
-                      }
+                      variant={isComplete ? "disabled" : "default"}
                       onClick={() => {
                         if (!isComplete) handleClick(quiz.id);
                       }}
@@ -63,11 +61,6 @@ export const PlayPage = () => {
                         <h3 className="text-xl font-semibold">Week {quiz.week}</h3>
                         <div className="relative">
                           <Progress value={quiz.progress} />
-                          {isComplete && (
-                            <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center text-xs font-semibold text-white">
-                              Complete!
-                            </div>
-                          )}
                         </div>
                       </CardContent>
                     </Card>
