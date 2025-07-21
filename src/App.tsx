@@ -4,7 +4,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Home } from "./pages/Home";
 import { Login } from "./pages/Login";
 import { NotFound } from "./pages/NotFound";
-import { PlayPage } from "./pages/Play";
+import { PlayPage } from "./pages/PlayPage";
 import { PredictionPage } from "./pages/Prediction";
 import { TeamPage } from "./pages/TeamPage";
 
