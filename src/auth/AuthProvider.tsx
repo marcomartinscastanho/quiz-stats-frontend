@@ -1,6 +1,7 @@
 import { jwtDecode } from "jwt-decode";
 import React, { useCallback, useEffect, useState } from "react";
-import { AuthContext, type User } from "./AuthContext";
+import type { User } from "../types/user";
+import { AuthContext } from "./AuthContext";
 import axios from "./axios";
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
