@@ -5,6 +5,7 @@ import { Home } from "./pages/Home";
 import { Login } from "./pages/Login";
 import { NotFound } from "./pages/NotFound";
 import { PlayPage } from "./pages/PlayPage";
+import { PlayQuizPage } from "./pages/PlayQuizPage";
 import { PredictionPage } from "./pages/Prediction";
 import { TeamPage } from "./pages/TeamPage";
 
@@ -51,6 +52,8 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Home />} />
             <Route path="/play" element={<PlayPage />} />
+            <Route path="/play/:quizId" element={<PlayQuizPage />} />
+
             <Route path="/team" element={<TeamPage />} />
             <Route path="/prediction" element={<PredictionPage />} />
           </Route>
