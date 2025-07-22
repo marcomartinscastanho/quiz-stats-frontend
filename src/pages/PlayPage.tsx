@@ -94,9 +94,10 @@ export const PlayPage = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card className="cursor-pointer" onClick={handleRandomClick}>
-          <CardContent className="p-6">
+          <CardContent className="p-0 md:p-2">
             <div className="text-xl font-semibold">Random</div>
             <p className="text-muted-foreground mt-1">Play random topics</p>
+            <p>🚧 not done yet</p>
           </CardContent>
         </Card>
       </div>
