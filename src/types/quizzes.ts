@@ -1,3 +1,5 @@
+import type { Category } from "./categories";
+
 export type QuizProgress = {
   id: number;
   season: number;
@@ -11,7 +13,7 @@ export type Question = {
   statement: string;
   answer: string;
   xp: number;
-  categories: string[];
+  categories: Category[];
 };
 
 export type Topic = {
