@@ -20,7 +20,7 @@ export function Login() {
   };
 
   return (
-    <form onSubmit={handleLogin} className="max-w-sm mx-auto mt-10 space-y-4">
+    <form onSubmit={handleLogin} className="max-w-sm mx-auto my-auto mt-20 space-y-4">
       <h1 className="text-2xl font-bold">Login</h1>
       {error && <p className="text-red-500">{error}</p>}
       <input

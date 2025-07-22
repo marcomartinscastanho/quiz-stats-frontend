@@ -56,13 +56,13 @@ export const TeamPage = () => {
 
   return (
     <div className="flex flex-col md:flex-row gap-6">
-      <div className="md:w-1/3 space-y-4">
+      <div className="md:w-1/3 flex flex-col gap-1 md:gap-2">
         {users.map(user => {
           const isSelected = selectedUserIds.includes(user.id);
           return (
             <div
               key={user.id}
-              className={`cursor-pointer border p-4 rounded shadow ${isSelected ? "bg-blue-100" : "bg-white"}`}
+              className={`cursor-pointer border p-2 md:p-4 rounded shadow transition ${isSelected ? "bg-blue-100" : "bg-white"}`}
               onClick={() => toggleUser(user.id)}
             >
               <h2 className="font-semibold">{user.full_name || user.username}</h2>
