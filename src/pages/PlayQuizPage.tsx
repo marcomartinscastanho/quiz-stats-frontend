@@ -123,7 +123,7 @@ export const PlayQuizPage = () => {
               <>
                 <div className="bg-muted rounded-md flex flex-col items-center md:my-4">
                   <label className="text-sm">Answer</label>
-                  <div className="text-3xl md:text-4xl mb-2">{currentQuestion.answer}</div>
+                  <div className="text-center text-3xl md:text-4xl mb-2">{currentQuestion.answer}</div>
                   {!!currentQuestion.xP && (
                     <div className="text-sm text-muted-foreground">XP: {currentQuestion.xP}</div>
                   )}

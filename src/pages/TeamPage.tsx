@@ -8,6 +8,7 @@ type User = {
   id: number;
   username: string;
   full_name: string;
+  total_answers: number;
 };
 
 export const TeamPage = () => {
@@ -62,11 +63,17 @@ export const TeamPage = () => {
           return (
             <div
               key={user.id}
-              className={`cursor-pointer border p-2 md:p-4 rounded shadow transition ${isSelected ? "bg-blue-100" : "bg-white"}`}
+              className={`flex cursor-pointer border p-2 md:p-4 rounded shadow transition ${isSelected ? "bg-blue-100" : "bg-white"}`}
               onClick={() => toggleUser(user.id)}
             >
-              <h2 className="font-semibold">{user.full_name || user.username}</h2>
-              <p className="text-sm text-gray-600">{user.username}</p>
+              <div className="flex-1 flex flex-col justify-between">
+                <h2 className="font-semibold">{user.full_name || user.username}</h2>
+                <p className="text-sm text-gray-600">{user.username}</p>
+              </div>
+              <div className="text-sm text-gray-600 text-center">
+                <p className="font-bold">{user.total_answers}</p>
+                <p>answers</p>
+              </div>
             </div>
           );
         })}
