@@ -9,7 +9,7 @@ import { PlayQuizPage } from "./pages/PlayQuizPage";
 import { PredictionPage } from "./pages/Prediction";
 import { TeamPage } from "./pages/TeamPage";
 
-function App() {
+export const App = () => {
   const { logout, accessToken } = useAuth();
   const navigate = useNavigate();
 
@@ -19,7 +19,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="flex flex-col min-h-screen">
       {/* 🧭 Top Nav */}
       <nav className="w-full bg-white shadow sticky top-0 z-10">
         <div className="max-w-[1200px] mx-auto flex justify-between items-center py-3 px-4">
@@ -31,7 +31,7 @@ function App() {
               Play
             </Link>
             <Link className="text-blue-600 hover:underline" to="/team">
-              Team Stats
+              Team
             </Link>
             <Link className="text-blue-600 hover:underline" to="/prediction">
               Predictor
@@ -46,14 +46,13 @@ function App() {
       </nav>
 
       {/* 📦 Main Routes */}
-      <main className="max-w-[1200px] mx-auto p-4">
+      <main className="flex flex-col flex-1 max-w-[1200px] w-full mx-auto p-4">
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Home />} />
             <Route path="/play" element={<PlayPage />} />
             <Route path="/play/:quizId" element={<PlayQuizPage />} />
-
             <Route path="/team" element={<TeamPage />} />
             <Route path="/prediction" element={<PredictionPage />} />
           </Route>

@@ -12,7 +12,7 @@ export type Question = {
   id: number;
   statement: string;
   answer: string;
-  xp: number;
+  xP: number;
   categories: Category[];
 };
 

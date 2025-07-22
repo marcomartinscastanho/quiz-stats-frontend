@@ -1,6 +1,5 @@
 @import "tailwindcss";
 
-/* Optional: make sure root elements don't have default spacing */
 html,
 body,
 #root {

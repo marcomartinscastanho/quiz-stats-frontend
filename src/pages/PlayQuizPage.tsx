@@ -101,36 +101,35 @@ export const PlayQuizPage = () => {
   if (!currentQuestion) return <div className="p-6">You finished this quiz!</div>;
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">
+    <div className="flex flex-col flex-1 space-y-6">
+      <h1 className="text-2xl md:text-4xl font-bold">
         Season {quiz.season} - Week {quiz.week}
       </h1>
 
-      <Card>
-        <CardContent className="space-y-10 p-6">
-          <h2 className="text-xl font-semibold">{currentQuestion.topicTitle}</h2>
-
-          <div className="text-5xl min-h-[200px] flex items-center justify-center text-center">
+      <Card className="flex flex-col flex-1">
+        <CardContent className="flex flex-col flex-1 justify-between p-0 md:p-6">
+          <h2 className="md:text-2xl font-semibold mb-4">{currentQuestion.topicTitle}</h2>
+          <div className="text-2xl md:text-5xl min-h-[200px] flex items-center justify-center text-center">
             {currentQuestion.statement}
           </div>
 
-          <div className="flex flex-col items-center justify-center">
+          <div className="flex flex-col items-center justify-center md:mb-20">
             {!reveal ? (
               <>
-                <div className="text-muted-foreground text-sm">{formatTime(timeLeft)}</div>
-                <Button onClick={() => setReveal(true)}>Reveal the answer</Button>
+                <div className="text-muted-foreground text-sm md:text-base font-bold text-red-700 mb-1">{formatTime(timeLeft)}</div>
+                <Button className="p-8 md:p-10 text-xl md:text-3xl" onClick={() => setReveal(true)}>Show Answer</Button>
               </>
             ) : (
               <>
-                <div className="bg-muted p-4 rounded-md flex flex-col items-center">
-                  <div className="">Answer:</div>
-                  <div className="text-4xl mb-2">{currentQuestion.answer}</div>
-                  {!!currentQuestion.xp && (
-                    <div className="text-sm text-muted-foreground">XP: {currentQuestion.xp}</div>
+                <div className="bg-muted rounded-md flex flex-col items-center md:my-4">
+                  <label className="text-sm">Answer</label>
+                  <div className="text-3xl md:text-4xl mb-2">{currentQuestion.answer}</div>
+                  {!!currentQuestion.xP && (
+                    <div className="text-sm text-muted-foreground">XP: {currentQuestion.xP}</div>
                   )}
                 </div>
-                <label className="block mb-1">Categories:</label>
-                <div className="w-1/2 mb-10">
+                <label className="text-sm mb-1">Categories</label>
+                <div className="w-full md:w-1/2 mb-3 md:mb-10">
                   <Select
                     isMulti
                     value={selectedCategories}
@@ -144,22 +143,18 @@ export const PlayQuizPage = () => {
                     classNamePrefix="react-select"
                   />
                 </div>
-                <div className="flex gap-4">
+                <div className="flex gap-2 md:gap-4 w-full md:w-1/2">
                   <Button
-                    className="bg-red-600 hover:bg-red-700 p-8"
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-lg md:text-3xl px-2 py-8 md:py-10"
                     onClick={() => mutation.mutate({ question: currentQuestion.id, is_correct: false })}
                   >
-                    I didn't guess it
-                    <br />
-                    (no problem)
+                    Didn't know...
                   </Button>
                   <Button
-                    className="bg-green-600 hover:bg-green-700 p-8"
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-lg md:text-3xl px-2 py-8 md:py-10"
                     onClick={() => mutation.mutate({ question: currentQuestion.id, is_correct: true })}
                   >
-                    I guessed it
-                    <br />
-                    (be honest)
+                    I Knew It!
                   </Button>
                 </div>
               </>

@@ -45,8 +45,9 @@ export const PredictionPage = () => {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <h1 className="text-2xl font-bold">Predict xT</h1>
+      <p>🚧 under construction</p>
 
       <div>
         <h2 className="text-xl font-semibold mb-2">Select Users</h2>
