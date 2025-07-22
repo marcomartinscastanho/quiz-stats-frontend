@@ -29,4 +29,5 @@ jobs:
             cd ~/qs-frontend
             git pull origin main
             docker compose -f docker-compose.prod.yml up --build -d
+            sudo nginx -s reload || sudo systemctl restart nginx
           EOF
