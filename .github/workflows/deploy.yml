@@ -23,8 +23,8 @@ jobs:
       - name: Deploy frontend
         run: |
           ssh ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
-            if [ ! -d ~/qs-backend ]; then
-              git clone git@github.com:marcomartinscastanho/quiz-stats-backend.git ~/qs-backend
+            if [ ! -d ~/qs-frontend ]; then
+              git clone git@github.com:marcomartinscastanho/quiz-stats-frontend.git ~/qs-frontend
             fi
             cd ~/qs-frontend
             git pull origin main
