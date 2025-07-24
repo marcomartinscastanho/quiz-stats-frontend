@@ -21,7 +21,7 @@ export const TeamPage = () => {
     const fetchUsersAndTeamStats = async () => {
       const [usersRes, teamStatsRes] = await Promise.all([
         axios.get("/users/"),
-        axios.get("/users/team/stats/groups/"),
+        axios.get("/users/team/stats/category-groups/"),
       ]);
       setUsers(usersRes.data);
       setTeamStats(teamStatsRes.data);
@@ -36,7 +36,7 @@ export const TeamPage = () => {
     } else {
       setSelectedUserIds(ids => [...ids, userId]);
       if (!userStats[userId]) {
-        const res = await axios.get(`/users/${userId}/stats/groups/`);
+        const res = await axios.get(`/users/${userId}/stats/category-groups/`);
         setUserStats(stats => ({ ...stats, [userId]: res.data }));
       }
     }
