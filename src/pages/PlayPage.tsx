@@ -39,9 +39,9 @@ export const PlayPage = () => {
     navigate(`/play/${quizId}/`);
   };
 
-  const handleRandomClick = () => {
-    navigate("/play/random/");
-  };
+  // const handleRandomClick = () => {
+  //   navigate("/play/random/");
+  // };
 
   return (
     <div className="space-y-6">
@@ -92,7 +92,7 @@ export const PlayPage = () => {
         })}
       </Accordion>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card className="cursor-pointer" onClick={handleRandomClick}>
           <CardContent className="p-0 md:p-2">
             <div className="text-xl font-semibold">Random</div>
@@ -100,7 +100,7 @@ export const PlayPage = () => {
             <p>🚧 not done yet</p>
           </CardContent>
         </Card>
-      </div>
+      </div> */}
     </div>
   );
 };

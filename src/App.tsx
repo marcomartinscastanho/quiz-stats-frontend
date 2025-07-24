@@ -19,7 +19,7 @@ export const App = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-lvh">
       {/* 🧭 Top Nav */}
       <nav className="w-full bg-white shadow sticky top-0 z-10">
         <div className="max-w-[1200px] mx-auto flex justify-between items-center py-3 px-4">
@@ -61,6 +61,6 @@ export const App = () => {
       </main>
     </div>
   );
-}
+};
 
 export default App;

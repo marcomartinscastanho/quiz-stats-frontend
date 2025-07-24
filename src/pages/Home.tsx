@@ -9,8 +9,10 @@ export function Home() {
   const [userStats, setUserStats] = useState<CategoryGroupStat[]>([]);
 
   useEffect(() => {
-    axios.get("/users/me/stats/groups/").then(res => setUserStats(res.data));
-  }, []);
+    if (user) {
+      axios.get(`/users/${user.id}/stats/category-groups/`).then(res => setUserStats(res.data));
+    }
+  }, [user]);
 
   const datasets = [
     {
