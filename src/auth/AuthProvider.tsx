@@ -6,6 +6,7 @@ import axios from "./axios";
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [accessToken, setAccessToken] = useState<string | null>(() => localStorage.getItem("accessToken"));
+  const [refreshToken, setRefreshToken] = useState<string | null>(() => localStorage.getItem("refreshToken"));
   const [user, setUser] = useState<User | null>(null);
 
   const fetchUser = useCallback(async (token: string) => {
@@ -16,7 +17,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(res.data);
     } catch (err) {
       console.error("Failed to fetch user:", err);
-      logout(); // Optional: logout if token is bad
+      logout();
     }
   }, []);
 
@@ -27,6 +28,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.setItem("accessToken", token);
       localStorage.setItem("refreshToken", res.data.refresh);
       setAccessToken(token);
+      setRefreshToken(res.data.refresh);
       await fetchUser(token);
       return true;
     } catch {
@@ -41,14 +43,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.removeItem("refreshToken");
   };
 
-  useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    if (token && !user) {
+  const refresh = useCallback(async () => {
+    try {
+      const res = await axios.post("/token/refresh/", {
+        refresh: refreshToken,
+      });
+      const token = res.data.access;
+      localStorage.setItem("accessToken", token);
       setAccessToken(token);
-      fetchUser(token);
+      await fetchUser(token);
+    } catch {
+      logout(); // Refresh failed
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchUser, refreshToken]);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
   // ⏱️ Auto-refresh logic
   useEffect(() => {
@@ -69,23 +80,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
 
-    const refresh = async () => {
-      try {
-        const res = await axios.post("/token/refresh/", {
-          refresh: localStorage.getItem("refreshToken"),
-        });
-        const token = res.data.access;
-        localStorage.setItem("accessToken", token);
-        setAccessToken(token);
-        await fetchUser(token);
-      } catch {
-        logout(); // Refresh failed
-      }
-    };
-
     scheduleRefresh();
     return () => clearTimeout(interval);
-  }, [accessToken, fetchUser]);
+  }, [accessToken, fetchUser, refresh, refreshToken]);
 
   return <AuthContext.Provider value={{ accessToken, user, login, logout }}>{children}</AuthContext.Provider>;
 };

@@ -85,7 +85,7 @@ export const TeamPage = () => {
         {teams.map(team => {
           const isTeamSelected = selectedTeamIds.includes(team.id);
           return (
-            <div className="flex flex-col gap-1 md:gap-2 pb-1 md:pb-2">
+            <div key={team.id} className="flex flex-col gap-1 md:gap-2 pb-1 md:pb-2">
               <StatToggle
                 id={team.id}
                 title={team.name}
