@@ -11,7 +11,7 @@ export const StatToggle: React.FC<StatToggleProps> = ({ id, title, subtitle, tot
   return (
     <div
       key={id}
-      className={`flex cursor-pointer border p-2 md:p-4 rounded shadow transition ${isSelected ? "bg-blue-100" : "bg-white"}`}
+      className={`flex cursor-pointer border px-2 py-1 md:p-4 rounded shadow transition ${isSelected ? "bg-blue-100" : "bg-white"}`}
       onClick={() => onToggle(id)}
     >
       <div className="flex-1 flex flex-col justify-between">
