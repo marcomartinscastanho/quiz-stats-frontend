@@ -8,6 +8,7 @@ import { PlayPage } from "./pages/PlayPage";
 import { PlayQuizPage } from "./pages/PlayQuizPage";
 import { PredictionPage } from "./pages/Prediction";
 import { TeamPage } from "./pages/TeamPage";
+import { PredictorPage } from "./pages/perdictor/Predictor";
 
 export const App = () => {
   const { logout, accessToken } = useAuth();
@@ -54,6 +55,7 @@ export const App = () => {
             <Route path="/play" element={<PlayPage />} />
             <Route path="/play/:quizId" element={<PlayQuizPage />} />
             <Route path="/team" element={<TeamPage />} />
+            <Route path="/predictor" element={<PredictorPage />} />
             <Route path="/prediction" element={<PredictionPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />

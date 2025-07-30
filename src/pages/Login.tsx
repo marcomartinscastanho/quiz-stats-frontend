@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
+import { Header } from "../components/ui/PageHeader";
 
 export function Login() {
   const [username, setUsername] = useState("");
@@ -21,7 +22,7 @@ export function Login() {
 
   return (
     <form onSubmit={handleLogin} className="max-w-sm mx-auto my-auto mt-20 space-y-4">
-      <h1 className="text-2xl font-bold">Login</h1>
+      <Header title="Login" />
       {error && <p className="text-red-500">{error}</p>}
       <input
         type="text"

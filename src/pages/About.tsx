@@ -1,5 +1,7 @@
+import { Header } from "../components/ui/PageHeader";
+
 export function About() {
-  return <h1 className="text-2xl font-bold">About Page</h1>;
+  return <Header title="About Me" />;
 }
 
 export default About;

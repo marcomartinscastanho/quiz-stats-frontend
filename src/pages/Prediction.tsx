@@ -3,6 +3,7 @@ import { useState } from "react";
 import axios from "../auth/axios";
 import { Button } from "../components/ui/Button";
 import { Card, CardContent } from "../components/ui/Card";
+import { Header } from "../components/ui/PageHeader";
 import { Textarea } from "../components/ui/Textarea";
 import type { PredictedTopic, PredictedTopicRequest, PredictedTopicUser } from "../types/topics";
 import type { User } from "../types/user";
@@ -16,8 +17,6 @@ export const PredictionPage = () => {
     queryKey: ["users"],
     queryFn: async () => {
       const res = await axios.get<User[]>("/users/");
-      console.log("HEY HO", res);
-
       return res.data;
     },
   });
@@ -46,7 +45,7 @@ export const PredictionPage = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Predict xT</h1>
+      <Header title="👴🏻 Prediction" />
       <p>🚧 under construction</p>
 
       <div>
