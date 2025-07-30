@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "../auth/axios";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../components/ui/Accordion";
 import { Card, CardContent } from "../components/ui/Card";
+import { Header } from "../components/ui/PageHeader";
 import { Progress } from "../components/ui/Progress";
 import type { QuizProgress } from "../types/quizzes";
 
@@ -45,8 +46,7 @@ export const PlayPage = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Play Quizzes</h1>
-
+      <Header title="Play Quizzes" />
       <Accordion type="single" defaultValue={defaultSeason} className="w-full">
         {Object.entries(groupedBySeason).map(([season, quizzes]) => {
           const completed = quizzes.filter(q => q.progress >= 100).length;

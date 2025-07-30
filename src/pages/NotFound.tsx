@@ -1,5 +1,7 @@
+import { Header } from "../components/ui/PageHeader";
+
 export function NotFound() {
-  return <h1 className="text-2xl font-bold">Not Found</h1>;
+  return <Header title="Not Found" />;
 }
 
 export default NotFound;

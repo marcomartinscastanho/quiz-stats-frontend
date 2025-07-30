@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "../auth/axios";
 import { useAuth } from "../auth/useAuth";
 import { GroupStatsRadarChart } from "../components/GroupStatsRadarChart";
+import { Header } from "../components/ui/PageHeader";
 import type { CategoryGroupStat } from "../types/categories";
 
 export function Home() {
@@ -24,7 +25,7 @@ export function Home() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Home Page</h1>
+      <Header title="Home Page" />
       <p>Welcome back, {user?.first_name}!</p>
       <GroupStatsRadarChart datasets={datasets} />
     </div>
