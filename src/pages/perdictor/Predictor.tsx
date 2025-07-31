@@ -9,7 +9,6 @@ import { Step4 } from "./Step4";
 export const PredictorPage: React.FC = () => {
   const [step, setStep] = useState(1);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
-
   const [firstHalfTopics, setFirstHalfTopics] = useState<CategorizedTopic[]>([]);
   const [secondHalfTopics, setSecondHalfTopics] = useState<CategorizedTopic[]>([]);
 
@@ -23,9 +22,23 @@ export const PredictorPage: React.FC = () => {
     setStep(3);
   };
 
+  const handleProgressToStep4 = () => {
+    console.log("selectedUserIds", selectedUserIds);
+    console.log(
+      "firstHalfTopics",
+      firstHalfTopics.flatMap(t => t.categories).map(c => c.id)
+    );
+    console.log(
+      "secondHalfTopics",
+      secondHalfTopics.flatMap(t => t.categories).map(c => c.id)
+    );
+  };
+
   const toggleUser = (id: number) => {
     setSelectedUserIds(prev => (prev.includes(id) ? prev.filter(uid => uid !== id) : [...prev, id]));
   };
+
+  const handleClearUsers = () => setSelectedUserIds([]);
 
   return (
     <div className="space-y-6">
@@ -40,7 +53,14 @@ export const PredictorPage: React.FC = () => {
           onNext={handleProgressToStep3}
         />
       )}
-      {step === 3 && <Step3 selectedUserIds={selectedUserIds} onToggleUser={toggleUser} onNext={() => {}} />}
+      {step === 3 && (
+        <Step3
+          selectedUserIds={selectedUserIds}
+          onToggleUser={toggleUser}
+          onClearUsers={handleClearUsers}
+          onNext={handleProgressToStep4}
+        />
+      )}
       {step === 4 && <Step4 />}
     </div>
   );
