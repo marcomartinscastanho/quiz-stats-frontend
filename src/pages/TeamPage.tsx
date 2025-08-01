@@ -97,6 +97,7 @@ export const TeamPage = () => {
                 const isSelected = selectedUserIds.includes(user.id);
                 return (
                   <StatToggle
+                    key={user.id}
                     id={user.id}
                     title={user.full_name}
                     subtitle={user.username}
@@ -110,9 +111,7 @@ export const TeamPage = () => {
           );
         })}
       </div>
-      <div className="md:w-2/3">
-        <GroupStatsRadarChart datasets={datasets} />
-      </div>
+      <GroupStatsRadarChart datasets={datasets} />
     </div>
   );
 };
