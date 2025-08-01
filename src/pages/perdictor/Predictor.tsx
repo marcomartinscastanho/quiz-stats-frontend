@@ -8,7 +8,7 @@ import type { Team } from "../../types/user";
 import { Step1 } from "./Step1";
 import { Step2 } from "./Step2";
 import { Step3 } from "./Step3";
-import { Step4 } from "./Step4";
+import { Step4, type DataSet } from "./Step4";
 import { Step5 } from "./Step5";
 
 export const PredictorPage: React.FC = () => {
@@ -20,6 +20,7 @@ export const PredictorPage: React.FC = () => {
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
   const [userStats, setUserStats] = useState<Record<number, CategoryStat[]>>({});
+  const [teamStats, setTeamStats] = useState<CategoryStat[]>([]);
 
   const handleNext = () => setStep(s => s + 1);
   const handlePrev = () => setStep(s => s - 1);
@@ -73,16 +74,18 @@ export const PredictorPage: React.FC = () => {
     return Array.from(categoryMap.values()).sort((a, b) => b.count - a.count);
   }, [firstHalfTopics, secondHalfTopics]);
 
+  const selectedCategoryIds = useMemo(
+    () =>
+      [...firstHalfTopics.flatMap(t => t.categories), ...secondHalfTopics.flatMap(t => t.categories)].map(c => c.id),
+    [firstHalfTopics, secondHalfTopics]
+  );
+
   useEffect(() => {
     const fetchUserStats = async () => {
       Promise.all(selectedUserIds.map(userId => axios.get<CategoryStat[]>(`/users/${userId}/stats/categories/`))).then(
         results => {
           const newStats: Record<string, CategoryStat[]> = {};
           selectedUserIds.forEach((id, index) => {
-            const selectedCategoryIds = [
-              ...firstHalfTopics.flatMap(t => t.categories),
-              ...secondHalfTopics.flatMap(t => t.categories),
-            ].map(c => c.id);
             newStats[id] = results[index].data.filter(stat => selectedCategoryIds.includes(stat.category_id));
           });
           setUserStats(newStats);
@@ -92,18 +95,39 @@ export const PredictorPage: React.FC = () => {
     if (selectedUserIds.length > 0) {
       fetchUserStats();
     }
-  }, [firstHalfTopics, secondHalfTopics, selectedTeam, selectedUserIds]);
+  }, [selectedCategoryIds, selectedUserIds]);
+
+  useEffect(() => {
+    const fetchTeamStats = async () => {
+      if (!selectedTeam) {
+        return;
+      }
+      axios
+        .get<CategoryStat[]>(`/teams/${selectedTeam.id}/stats/categories/`)
+        .then(res => setTeamStats(res.data.filter(stat => selectedCategoryIds.includes(stat.category_id))));
+    };
+
+    fetchTeamStats();
+  }, [selectedCategoryIds, selectedTeam]);
 
   const datasets = useMemo(() => {
     const users = selectedTeam ? selectedTeam.users.filter(u => selectedUserIds.includes(u.id)) : [];
-    return [
+    const data: DataSet[] = [];
+    if (selectedTeam) {
+      data.push({
+        label: selectedTeam.name,
+        color: colors[-1],
+        data: teamStats,
+      });
+    }
+    return data.concat([
       ...users.map((user, index) => ({
         label: user.username,
         color: colors[index % colors.length],
         data: userStats[user.id] || [],
       })),
-    ];
-  }, [selectedTeam, selectedUserIds, userStats]);
+    ]);
+  }, [selectedTeam, selectedUserIds, teamStats, userStats]);
 
   return (
     <div className="space-y-6">

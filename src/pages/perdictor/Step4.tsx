@@ -2,7 +2,7 @@ import { CategoryStatsRadarChart } from "../../components/CategoryStatsRadarChar
 import { Button } from "../../components/ui/Button";
 import type { CategoryStat, CategorySummary } from "../../types/categories";
 
-type DataSet = {
+export type DataSet = {
   label: string;
   color: string;
   data: CategoryStat[];
