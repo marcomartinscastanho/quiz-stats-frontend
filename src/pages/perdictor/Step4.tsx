@@ -1,26 +1,21 @@
 import { CategoryStatsRadarChart } from "../../components/CategoryStatsRadarChart";
 import { Button } from "../../components/ui/Button";
-import { colors } from "../../constants";
 import type { CategoryStat, CategorySummary } from "../../types/categories";
-import type { User } from "../../types/user";
+
+type DataSet = {
+  label: string;
+  color: string;
+  data: CategoryStat[];
+};
 
 type Props = {
   categories: CategorySummary[];
-  users: User[];
-  userStats: Record<number, CategoryStat[]>;
+  datasets: DataSet[];
   onNext: () => void;
   onPrev: () => void;
 };
 
-export const Step4: React.FC<Props> = ({ categories, users, userStats, onNext, onPrev }) => {
-  const datasets = [
-    ...users.map((user, index) => ({
-      label: user.username,
-      color: colors[index % colors.length],
-      data: userStats[user.id] || [],
-    })),
-  ];
-
+export const Step4: React.FC<Props> = ({ categories, datasets, onNext, onPrev }) => {
   return (
     <div>
       <h2 className="text-xl font-semibold mb-4">Review</h2>

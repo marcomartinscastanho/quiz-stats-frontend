@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import axios from "../../auth/axios";
 import { Header } from "../../components/ui/PageHeader";
+import { colors } from "../../constants";
 import type { CategorizedTopic, CategorizeResponse } from "../../types/api";
 import type { CategoryStat, CategorySummary } from "../../types/categories";
 import type { Team } from "../../types/user";
@@ -93,6 +94,17 @@ export const PredictorPage: React.FC = () => {
     }
   }, [firstHalfTopics, secondHalfTopics, selectedTeam, selectedUserIds]);
 
+  const datasets = useMemo(() => {
+    const users = selectedTeam ? selectedTeam.users.filter(u => selectedUserIds.includes(u.id)) : [];
+    return [
+      ...users.map((user, index) => ({
+        label: user.username,
+        color: colors[index % colors.length],
+        data: userStats[user.id] || [],
+      })),
+    ];
+  }, [selectedTeam, selectedUserIds, userStats]);
+
   return (
     <div className="space-y-6">
       <Header title="Predictor" />
@@ -127,13 +139,7 @@ export const PredictorPage: React.FC = () => {
         />
       )}
       {step === 4 && (
-        <Step4
-          categories={sortedCategories}
-          users={selectedTeam ? selectedTeam.users.filter(u => selectedUserIds.includes(u.id)) : []}
-          userStats={userStats}
-          onNext={handleProgressToStep5}
-          onPrev={handlePrev}
-        />
+        <Step4 categories={sortedCategories} datasets={datasets} onNext={handleProgressToStep5} onPrev={handlePrev} />
       )}
       {step === 5 && <Step5 />}
     </div>
