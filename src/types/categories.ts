@@ -5,6 +5,13 @@ export type CategoryGroupStat = {
   answered?: number;
 };
 
+export type CategoryStat = {
+  category_id: number;
+  category_name: string;
+  xC: number;
+  answered?: number;
+};
+
 export type Category = {
   id: number;
   name: string;

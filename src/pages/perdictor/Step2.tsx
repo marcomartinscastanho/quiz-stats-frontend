@@ -11,6 +11,8 @@ type Props = {
   secondHalfTopics: CategorizedTopic[];
   onChangeFirstHalf: (values: CategorizedTopic[]) => void;
   onChangeSecondHalf: (values: CategorizedTopic[]) => void;
+  onNext: () => void;
+  onPrev: () => void;
 };
 
 export const Step2: React.FC<Props> = ({
@@ -18,6 +20,8 @@ export const Step2: React.FC<Props> = ({
   secondHalfTopics,
   onChangeFirstHalf,
   onChangeSecondHalf,
+  onNext,
+  onPrev,
 }) => {
   const { data: categoryGroups } = useQuery<CategoryGroup[]>({
     queryKey: ["category-groups"],
@@ -41,7 +45,7 @@ export const Step2: React.FC<Props> = ({
 
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4">Review</h2>
+      <h2 className="text-xl font-semibold mb-4">Categorize Topics</h2>
       <div className="flex flex-col lg:flex-row gap-6">
         <TopicsCategories
           title="First Half"
@@ -58,7 +62,10 @@ export const Step2: React.FC<Props> = ({
       </div>
 
       <div className="mt-6 flex gap-4">
-        <Button>Predict</Button>
+        <Button variant="secondary" onClick={onPrev}>
+          Back
+        </Button>
+        <Button onClick={onNext}>Select Users</Button>
       </div>
     </div>
   );

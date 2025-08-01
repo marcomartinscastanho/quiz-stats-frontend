@@ -1,18 +1,24 @@
 import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
 import axios from "../../auth/axios";
 import { Button } from "../../components/ui/Button";
 import { Textarea } from "../../components/ui/Textarea";
 import type { CategorizeResponse } from "../../types/api";
 
 type Props = {
+  firstHalf: string;
+  secondHalf: string;
+  onChangeFirstHalf: (t: string) => void;
+  onChangeSecondHalf: (t: string) => void;
   onNextStep: (data: CategorizeResponse) => void;
 };
 
-export const Step1: React.FC<Props> = ({ onNextStep }) => {
-  const [firstHalfText, setFirstHalfText] = useState("");
-  const [secondHalfText, setSecondHalfText] = useState("");
-
+export const Step1: React.FC<Props> = ({
+  firstHalf,
+  secondHalf,
+  onChangeFirstHalf,
+  onChangeSecondHalf,
+  onNextStep,
+}) => {
   const categorizeMutation = useMutation({
     mutationFn: (body: { first_half_topics: string[]; second_half_topics: string[] }) =>
       axios.post<CategorizeResponse>("/quizzes/predictor/topics/categorize/", body).then(res => res.data),
@@ -20,11 +26,11 @@ export const Step1: React.FC<Props> = ({ onNextStep }) => {
   });
 
   const handleCategorize = () => {
-    const firstHalfTopics = firstHalfText
+    const firstHalfTopics = firstHalf
       .split(/\n|,/)
       .map(t => t.trim())
       .filter(t => t);
-    const secondHalfTopics = secondHalfText
+    const secondHalfTopics = secondHalf
       .split(/\n|,/)
       .map(t => t.trim())
       .filter(t => t);
@@ -37,20 +43,20 @@ export const Step1: React.FC<Props> = ({ onNextStep }) => {
       <div className="flex gap-4">
         <Textarea
           rows={12}
-          value={firstHalfText}
-          onChange={e => setFirstHalfText(e.target.value)}
+          value={firstHalf}
+          onChange={e => onChangeFirstHalf(e.target.value)}
           placeholder="Paste first half topics here"
           className="flex-1"
         />
         <Textarea
           rows={12}
-          value={secondHalfText}
-          onChange={e => setSecondHalfText(e.target.value)}
+          value={secondHalf}
+          onChange={e => onChangeSecondHalf(e.target.value)}
           placeholder="Paste second half topics here"
           className="flex-1"
         />
       </div>
-      <Button className="mt-4" onClick={handleCategorize} disabled={!firstHalfText.trim() && !secondHalfText.trim()}>
+      <Button className="mt-4" onClick={handleCategorize} disabled={!firstHalf.trim() && !secondHalf.trim()}>
         Categorize
       </Button>
     </div>
