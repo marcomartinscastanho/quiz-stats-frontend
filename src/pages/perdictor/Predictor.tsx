@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "../../auth/axios";
 import { Header } from "../../components/ui/PageHeader";
 import type { CategorizedTopic, CategorizeResponse } from "../../types/api";
-import type { CategoryStat } from "../../types/categories";
+import type { CategoryStat, CategorySummary } from "../../types/categories";
 import type { Team } from "../../types/user";
 import { Step1 } from "./Step1";
 import { Step2 } from "./Step2";
@@ -46,6 +46,31 @@ export const PredictorPage: React.FC = () => {
   };
 
   const handleClearUsers = () => setSelectedUserIds([]);
+
+  const sortedCategories = useMemo(() => {
+    const mergedTopics = [...firstHalfTopics, ...secondHalfTopics];
+
+    const categoryMap = mergedTopics.reduce<Map<number, CategorySummary>>((acc, { topic, categories }) => {
+      categories.forEach(category => {
+        if (!acc.has(category.id)) {
+          acc.set(category.id, {
+            category,
+            count: 1,
+            topics: [topic],
+          });
+        } else {
+          const entry = acc.get(category.id)!;
+          entry.count += 1;
+          if (!entry.topics.includes(topic)) {
+            entry.topics.push(topic);
+          }
+        }
+      });
+      return acc;
+    }, new Map());
+
+    return Array.from(categoryMap.values()).sort((a, b) => b.count - a.count);
+  }, [firstHalfTopics, secondHalfTopics]);
 
   useEffect(() => {
     const fetchUserStats = async () => {
@@ -103,8 +128,7 @@ export const PredictorPage: React.FC = () => {
       )}
       {step === 4 && (
         <Step4
-          firstHalfTopics={firstHalfTopics}
-          secondHalfTopics={secondHalfTopics}
+          categories={sortedCategories}
           users={selectedTeam ? selectedTeam.users.filter(u => selectedUserIds.includes(u.id)) : []}
           userStats={userStats}
           onNext={handleProgressToStep5}

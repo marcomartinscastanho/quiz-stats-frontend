@@ -22,3 +22,9 @@ export type CategoryGroup = {
   name: string;
   categories: Category[];
 };
+
+export type CategorySummary = {
+  category: Category;
+  count: number;
+  topics: string[];
+};
