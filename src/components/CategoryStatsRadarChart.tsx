@@ -20,12 +20,12 @@ type Props = {
 };
 
 export const CategoryStatsRadarChart: React.FC<Props> = ({ datasets }) => {
-  const categories = Array.from(new Set(datasets.flatMap(ds => ds.data.map(c => c.catgory_name))));
+  const categories = Array.from(new Set(datasets.flatMap(ds => ds.data.map(c => c.category_name))));
 
   const mergedData = categories.map(category_name => {
-    const row: Record<string, string | number> = { group_name: category_name };
+    const row: Record<string, string | number> = { category_name };
     datasets.forEach(ds => {
-      const match = ds.data.find(c => c.catgory_name === category_name);
+      const match = ds.data.find(c => c.category_name === category_name);
       row[ds.label] = match?.xC ?? 0;
     });
     return row;
@@ -36,7 +36,7 @@ export const CategoryStatsRadarChart: React.FC<Props> = ({ datasets }) => {
       <ResponsiveContainer>
         <RadarChart cx="50%" cy="50%" outerRadius="80%" data={mergedData}>
           <PolarGrid />
-          <PolarAngleAxis dataKey="group_name" />
+          <PolarAngleAxis dataKey="category_name" />
           <PolarRadiusAxis />
           {datasets.map(ds => (
             <Radar

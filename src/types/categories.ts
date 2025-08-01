@@ -7,7 +7,7 @@ export type CategoryGroupStat = {
 
 export type CategoryStat = {
   category_id: number;
-  catgory_name: string;
+  category_name: string;
   xC: number;
   answered?: number;
 };
