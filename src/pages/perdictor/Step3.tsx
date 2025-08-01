@@ -1,20 +1,28 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import Select from "react-select";
 import axios from "../../auth/axios";
 import { Button } from "../../components/ui/Button";
 import type { Team, User } from "../../types/user";
 
 type Props = {
+  selectedTeam: Team | null;
+  onChangeTeam: (team: Team | null) => void;
   selectedUserIds: number[];
   onToggleUser: (id: number) => void;
   onClearUsers: () => void;
   onNext: () => void;
+  onPrev: () => void;
 };
 
-export const Step3: React.FC<Props> = ({ selectedUserIds, onToggleUser, onClearUsers, onNext }) => {
-  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
-
+export const Step3: React.FC<Props> = ({
+  selectedTeam,
+  selectedUserIds,
+  onChangeTeam,
+  onToggleUser,
+  onClearUsers,
+  onNext,
+  onPrev,
+}) => {
   const { data: teams, isLoading } = useQuery<Team[]>({
     queryKey: ["teams"],
     queryFn: async () => {
@@ -26,7 +34,7 @@ export const Step3: React.FC<Props> = ({ selectedUserIds, onToggleUser, onClearU
   const handleTeamChange = (option: { value: number; label: string } | null) => {
     if (!option) return;
     const team = teams?.find(t => t.id === option.value) || null;
-    setSelectedTeam(team);
+    onChangeTeam(team);
     onClearUsers();
   };
 
@@ -43,6 +51,7 @@ export const Step3: React.FC<Props> = ({ selectedUserIds, onToggleUser, onClearU
       <h2 className="text-xl font-semibold mb-2">Select Users</h2>
       <div className="mb-4">
         <Select
+          value={selectedTeam ? { label: selectedTeam.name, value: selectedTeam.id } : null}
           options={teamOptions}
           onChange={handleTeamChange}
           placeholder="Select a team..."
@@ -64,9 +73,14 @@ export const Step3: React.FC<Props> = ({ selectedUserIds, onToggleUser, onClearU
         </div>
       )}
 
-      <Button className="mt-4" onClick={onNext} disabled={selectedUserIds.length === 0}>
-        Predict
-      </Button>
+      <div className="mt-6 flex gap-4">
+        <Button variant="secondary" onClick={onPrev}>
+          Back
+        </Button>
+        <Button onClick={onNext} disabled={selectedUserIds.length === 0}>
+          Review
+        </Button>
+      </div>
     </div>
   );
 };

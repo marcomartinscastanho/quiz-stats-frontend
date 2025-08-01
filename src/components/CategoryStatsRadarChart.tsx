@@ -9,23 +9,23 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
-import type { CategoryGroupStat } from "../types/categories";
+import type { CategoryStat } from "../types/categories";
 
 type Props = {
   datasets: {
     label: string;
     color: string;
-    data: CategoryGroupStat[];
+    data: CategoryStat[];
   }[];
 };
 
-export const GroupStatsRadarChart: React.FC<Props> = ({ datasets }) => {
-  const groups = Array.from(new Set(datasets.flatMap(ds => ds.data.map(g => g.group_name))));
+export const CategoryStatsRadarChart: React.FC<Props> = ({ datasets }) => {
+  const categories = Array.from(new Set(datasets.flatMap(ds => ds.data.map(c => c.catgory_name))));
 
-  const mergedData = groups.map(group_name => {
-    const row: Record<string, string | number> = { group_name };
+  const mergedData = categories.map(category_name => {
+    const row: Record<string, string | number> = { group_name: category_name };
     datasets.forEach(ds => {
-      const match = ds.data.find(g => g.group_name === group_name);
+      const match = ds.data.find(c => c.catgory_name === category_name);
       row[ds.label] = match?.xC ?? 0;
     });
     return row;
@@ -56,4 +56,4 @@ export const GroupStatsRadarChart: React.FC<Props> = ({ datasets }) => {
   );
 };
 
-export default GroupStatsRadarChart;
+export default CategoryStatsRadarChart;

@@ -1,28 +1,32 @@
 import { useState } from "react";
 import { Header } from "../../components/ui/PageHeader";
 import type { CategorizedTopic, CategorizeResponse } from "../../types/api";
+import type { Team } from "../../types/user";
 import { Step1 } from "./Step1";
 import { Step2 } from "./Step2";
 import { Step3 } from "./Step3";
 import { Step4 } from "./Step4";
+import { Step5 } from "./Step5";
 
 export const PredictorPage: React.FC = () => {
   const [step, setStep] = useState(1);
+  const [firstHalfInputText, setFirstHalfInputText] = useState("");
+  const [secondHalfInputText, setSecondHalfInputText] = useState("");
+  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
   const [firstHalfTopics, setFirstHalfTopics] = useState<CategorizedTopic[]>([]);
   const [secondHalfTopics, setSecondHalfTopics] = useState<CategorizedTopic[]>([]);
 
-  const handleProgressToStep2 = async (data: CategorizeResponse) => {
+  const handleNext = () => setStep(s => s + 1);
+  const handlePrev = () => setStep(s => s - 1);
+
+  const handleProgressToStep2 = (data: CategorizeResponse) => {
     setFirstHalfTopics(data.first_half_categories);
     setSecondHalfTopics(data.second_half_categories);
-    setStep(2);
+    handleNext();
   };
 
-  const handleProgressToStep3 = () => {
-    setStep(3);
-  };
-
-  const handleProgressToStep4 = () => {
+  const handleProgressToStep5 = () => {
     console.log("selectedUserIds", selectedUserIds);
     console.log(
       "firstHalfTopics",
@@ -43,25 +47,46 @@ export const PredictorPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <Header title="Predictor" />
-      {step === 1 && <Step1 onNextStep={handleProgressToStep2} />}
+      {step === 1 && (
+        <Step1
+          firstHalf={firstHalfInputText}
+          secondHalf={secondHalfInputText}
+          onChangeFirstHalf={setFirstHalfInputText}
+          onChangeSecondHalf={setSecondHalfInputText}
+          onNextStep={handleProgressToStep2}
+        />
+      )}
       {step === 2 && (
         <Step2
           firstHalfTopics={firstHalfTopics}
           secondHalfTopics={secondHalfTopics}
           onChangeFirstHalf={setFirstHalfTopics}
           onChangeSecondHalf={setSecondHalfTopics}
-          onNext={handleProgressToStep3}
+          onNext={handleNext}
+          onPrev={handlePrev}
         />
       )}
       {step === 3 && (
         <Step3
+          selectedTeam={selectedTeam}
           selectedUserIds={selectedUserIds}
+          onChangeTeam={setSelectedTeam}
           onToggleUser={toggleUser}
           onClearUsers={handleClearUsers}
-          onNext={handleProgressToStep4}
+          onNext={handleNext}
+          onPrev={handlePrev}
         />
       )}
-      {step === 4 && <Step4 />}
+      {step === 4 && (
+        <Step4
+          selectedUserIds={selectedUserIds}
+          firstHalfTopics={firstHalfTopics}
+          secondHalfTopics={secondHalfTopics}
+          onNext={handleProgressToStep5}
+          onPrev={handlePrev}
+        />
+      )}
+      {step === 5 && <Step5 />}
     </div>
   );
 };
