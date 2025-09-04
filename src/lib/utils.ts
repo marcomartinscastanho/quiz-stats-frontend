@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import type { CategoryStat, CategorySummary } from "../types/categories";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -31,3 +32,13 @@ export function estimateReadingTime(sentence: string): number {
 
   return parseFloat(totalTime.toFixed(2));
 }
+
+export function flattenCategories(summaries: CategorySummary[]): number[] {
+  return summaries.flatMap(summary => Array(summary.count).fill(summary.category.id));
+}
+
+export const sortCategoryStats = (categoryStats: CategorySummary[]) => {
+  return (a: CategoryStat, b: CategoryStat) =>
+    (categoryStats.find(cs => cs.category.id == b.category_id)?.count || 0) -
+    (categoryStats.find(cs => cs.category.id == a.category_id)?.count || 0);
+};
