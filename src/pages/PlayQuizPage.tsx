@@ -5,7 +5,7 @@ import Select from "react-select";
 import axios from "../auth/axios";
 import { Button } from "../components/ui/Button";
 import { Card, CardContent } from "../components/ui/Card";
-import { formatTime } from "../lib/utils";
+import { estimateReadingTime, formatTime } from "../lib/utils";
 import type { CategoryGroup } from "../types/categories";
 import type { Quiz } from "../types/quizzes";
 
@@ -87,6 +87,10 @@ export const PlayQuizPage = () => {
           value: cat.id,
         }))
       );
+
+      // Set timeLeft = reading time + 20 seconds
+      const readingTime = estimateReadingTime(currentQuestion.statement);
+      setTimeLeft(Math.floor(readingTime + 20));
     }
   }, [currentQuestion]);
 
@@ -115,9 +119,13 @@ export const PlayQuizPage = () => {
 
           {!reveal ? (
             <div className="flex flex-col items-center">
-              <div className="text-muted-foreground text-sm md:text-base font-bold text-red-700 mb-1">
-                {formatTime(timeLeft)}
-              </div>
+              {!!timeLeft && timeLeft > 0 ? (
+                <div className="text-muted-foreground text-sm md:text-base font-bold text-red-700 mb-1">
+                  {formatTime(timeLeft)}
+                </div>
+              ) : (
+                <div className="text-muted-foreground text-md md:text-xl font-bold text-red-700 mb-1">Time's up!</div>
+              )}
               <Button className="p-8 md:p-10 text-xl md:text-3xl" onClick={() => setReveal(true)}>
                 Show Answer
               </Button>
