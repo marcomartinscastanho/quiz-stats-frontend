@@ -4,7 +4,9 @@ import { CategoryStatsRadarChart } from "../../components/CategoryStatsRadarChar
 import { Button } from "../../components/ui/Button";
 import { StatToggle } from "../../components/ui/StatToggle";
 import { colors } from "../../constants";
+import { flattenCategories, sortCategoryStats } from "../../lib/utils";
 import type { CategoryStat, CategorySummary } from "../../types/categories";
+import type { UserAptitude } from "../../types/predictor";
 import type { Team, User } from "../../types/user";
 
 export type DataSet = {
@@ -25,8 +27,11 @@ export const Step4: React.FC<Props> = ({ categoryStats, team, users, onPrev }) =
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>(users.map(u => u.id));
   const [userStats, setUserStats] = useState<Record<number, CategoryStat[]>>({});
   const [teamStats, setTeamStats] = useState<CategoryStat[]>([]);
+  const [userAptitudes, setUserAptitudes] = useState<Record<number, number>>({});
 
   const categoryIds = useMemo(() => categoryStats.map(stat => stat.category.id), [categoryStats]);
+  const userIds = useMemo(() => users.map(u => u.id), [users]);
+  const expandedCategoryIds = useMemo(() => flattenCategories(categoryStats), [categoryStats]);
 
   useEffect(() => {
     const fetchUserStats = async () => {
@@ -34,16 +39,40 @@ export const Step4: React.FC<Props> = ({ categoryStats, team, users, onPrev }) =
         results => {
           const newStats: Record<string, CategoryStat[]> = {};
           selectedUserIds.forEach((id, index) => {
-            newStats[id] = results[index].data.filter(stat => categoryIds.includes(stat.category_id));
+            newStats[id] = results[index].data
+              .filter(stat => categoryIds.includes(stat.category_id))
+              .sort(sortCategoryStats(categoryStats));
           });
           setUserStats(newStats);
         }
       );
     };
+
     if (selectedUserIds.length > 0) {
       fetchUserStats();
     }
-  }, [categoryIds, selectedUserIds]);
+  }, [categoryIds, categoryStats, selectedUserIds]);
+
+  useEffect(() => {
+    const fetchAptitudes = async () => {
+      axios
+        .post<UserAptitude[]>("/quizzes/predictor/order-of-play/", {
+          user_ids: userIds,
+          category_ids: expandedCategoryIds,
+        })
+        .then(result =>
+          result.data.reduce<Record<number, number>>((acc, { user_id, aptitude }) => {
+            acc[user_id] = aptitude;
+            return acc;
+          }, {})
+        )
+        .then(setUserAptitudes);
+    };
+
+    if (expandedCategoryIds.length > 0 && userIds.length > 0) {
+      fetchAptitudes();
+    }
+  }, [expandedCategoryIds, userIds]);
 
   useEffect(() => {
     const fetchTeamStats = async () => {
@@ -52,11 +81,15 @@ export const Step4: React.FC<Props> = ({ categoryStats, team, users, onPrev }) =
       }
       axios
         .get<CategoryStat[]>(`/teams/${team.id}/stats/categories/`)
-        .then(res => setTeamStats(res.data.filter(stat => categoryIds.includes(stat.category_id))));
+        .then(res =>
+          setTeamStats(
+            res.data.filter(stat => categoryIds.includes(stat.category_id)).sort(sortCategoryStats(categoryStats))
+          )
+        );
     };
 
     fetchTeamStats();
-  }, [categoryIds, team]);
+  }, [categoryIds, categoryStats, team]);
 
   const toggleTeam = async () => setIsTeamSelected(isSelected => !isSelected);
   const toggleUser = async (userId: number) => {
@@ -122,6 +155,7 @@ export const Step4: React.FC<Props> = ({ categoryStats, team, users, onPrev }) =
                     subtitle={user.username}
                     isSelected={isSelected}
                     total_answers={user.total_answers}
+                    aptitude={userAptitudes[user.id]}
                     onToggle={toggleUser}
                   />
                 );
