@@ -29,6 +29,11 @@ export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team
   const [isTeamSelected, setIsTeamSelected] = useState<boolean>(false);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>(users.map(u => u.id));
 
+  const toggleTeam = () => setIsTeamSelected(sel => !sel);
+  const toggleUser = (userId: number) => {
+    setSelectedUserIds(ids => (ids.includes(userId) ? ids.filter(id => id !== userId) : [...ids, userId]));
+  };
+
   const allTopics = useMemo(() => [...firstHalfTopics, ...secondHalfTopics], [firstHalfTopics, secondHalfTopics]);
   const categorySummaries = useMemo(() => {
     const categoryMap = allTopics.reduce<Map<number, CategorySummary>>((acc, { topic, categories }) => {
@@ -74,13 +79,6 @@ export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team
       staleTime: 15 * 60 * 1000, // 15 min cache
     })),
   });
-  const userStats: Record<number, CategoryStat[]> = useMemo(() => {
-    const stats: Record<number, CategoryStat[]> = {};
-    selectedUserIds.forEach((id, index) => {
-      stats[id] = userStatsQueries[index]?.data || [];
-    });
-    return stats;
-  }, [userStatsQueries, selectedUserIds]);
 
   const teamStatsQuery = useQuery({
     queryKey: ["teamStats", team?.id, categoryIds],
@@ -111,15 +109,12 @@ export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team
     enabled: userIds.length > 0 && expandedCategoryIds.length > 0,
   });
 
-  const userAptitudes = userAptitudesQuery.data || {};
-
-  const toggleTeam = () => setIsTeamSelected(sel => !sel);
-  const toggleUser = (userId: number) => {
-    setSelectedUserIds(ids => (ids.includes(userId) ? ids.filter(id => id !== userId) : [...ids, userId]));
-  };
-
   const datasets = useMemo(() => {
     const teamStats = teamStatsQuery.data || [];
+    const userStats: Record<number, CategoryStat[]> = {};
+    selectedUserIds.forEach((id, index) => {
+      userStats[id] = userStatsQueries[index]?.data || [];
+    });
     const selectedUsers = team ? team.users.filter(u => selectedUserIds.includes(u.id)) : [];
     const data: DataSet[] = [];
     if (isTeamSelected && !!team) {
@@ -136,7 +131,9 @@ export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team
         data: userStats[user.id] || [],
       })),
     ]);
-  }, [isTeamSelected, selectedUserIds, team, teamStatsQuery.data, userStats]);
+  }, [isTeamSelected, selectedUserIds, team, teamStatsQuery.data, userStatsQueries]);
+
+  const userAptitudes = userAptitudesQuery.data || {};
 
   return (
     <div>
