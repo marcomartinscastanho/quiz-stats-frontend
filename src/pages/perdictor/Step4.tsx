@@ -124,14 +124,19 @@ export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team
         data: teamStats,
       });
     }
-    return data.concat([
-      ...selectedUsers.map((user, index) => ({
-        label: user.username,
-        color: colors[index % colors.length],
-        data: userStats[user.id] || [],
-      })),
-    ]);
-  }, [isTeamSelected, selectedUserIds, team, teamStatsQuery.data, userStatsQueries]);
+    data.push(
+      ...selectedUsers.map(user => {
+        const userIndex = users.findIndex(u => u.id === user.id); // stable index
+        const stats = userStats[user.id] || [];
+        return {
+          label: user.username,
+          color: colors[userIndex % colors.length],
+          data: stats,
+        };
+      })
+    );
+    return data;
+  }, [isTeamSelected, selectedUserIds, team, teamStatsQuery.data, userStatsQueries, users]);
 
   const userAptitudes = userAptitudesQuery.data || {};
 
