@@ -56,8 +56,12 @@ export const Step1: React.FC<Props> = ({
           className="flex-1"
         />
       </div>
-      <Button className="mt-4" onClick={handleCategorize} disabled={!firstHalf.trim() && !secondHalf.trim()}>
-        Categorize
+      <Button
+        className="mt-4"
+        onClick={handleCategorize}
+        disabled={categorizeMutation.isPending || !firstHalf.trim() || !secondHalf.trim()}
+      >
+        {categorizeMutation.isPending ? "Categorizing..." : "Categorize"}
       </Button>
     </div>
   );
