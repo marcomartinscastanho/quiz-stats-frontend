@@ -1,10 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useQueries, useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
 import axios from "../../auth/axios";
 import { CategoryStatsRadarChart } from "../../components/CategoryStatsRadarChart";
 import { Button } from "../../components/ui/Button";
+import { CategoriesReview } from "../../components/ui/CategoriesReview";
+import { ReviewModeRadioButton } from "../../components/ui/ReviewModeRadioButton";
+import { SortedTopics } from "../../components/ui/SortedTopics";
 import { StatToggle } from "../../components/ui/StatToggle";
+import { TopicsReview } from "../../components/ui/TopicsReview";
 import { colors } from "../../constants";
 import { flattenCategories, sortCategoryStats } from "../../lib/utils";
+import type { CategorizedTopic } from "../../types/api";
 import type { CategoryStat, CategorySummary } from "../../types/categories";
 import type { UserAptitude } from "../../types/predictor";
 import type { Team, User } from "../../types/user";
@@ -18,43 +24,82 @@ export type DataSet = {
 type Props = {
   team: Team | null;
   users: User[];
-  categoryStats: CategorySummary[];
+  firstHalfTopics: CategorizedTopic[];
+  secondHalfTopics: CategorizedTopic[];
   onPrev: () => void;
 };
 
-export const Step4: React.FC<Props> = ({ categoryStats, team, users, onPrev }) => {
-  const [isTeamSelected, setIsTeamSelected] = useState<boolean>(!!team);
+export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team, users, onPrev }) => {
+  const [isTeamSelected, setIsTeamSelected] = useState<boolean>(false);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>(users.map(u => u.id));
-  const [userStats, setUserStats] = useState<Record<number, CategoryStat[]>>({});
-  const [teamStats, setTeamStats] = useState<CategoryStat[]>([]);
-  const [userAptitudes, setUserAptitudes] = useState<Record<number, number>>({});
+  const [reviewMode, setReviewMode] = useState<"categories" | "topics">("categories");
 
-  const categoryIds = useMemo(() => categoryStats.map(stat => stat.category.id), [categoryStats]);
-  const userIds = useMemo(() => users.map(u => u.id), [users]);
-  const expandedCategoryIds = useMemo(() => flattenCategories(categoryStats), [categoryStats]);
+  const toggleTeam = () => setIsTeamSelected(sel => !sel);
+  const toggleUser = (userId: number) => {
+    setSelectedUserIds(ids => (ids.includes(userId) ? ids.filter(id => id !== userId) : [...ids, userId]));
+  };
 
-  useEffect(() => {
-    const fetchUserStats = async () => {
-      Promise.all(selectedUserIds.map(userId => axios.get<CategoryStat[]>(`/users/${userId}/stats/categories/`))).then(
-        results => {
-          const newStats: Record<string, CategoryStat[]> = {};
-          selectedUserIds.forEach((id, index) => {
-            newStats[id] = results[index].data
-              .filter(stat => categoryIds.includes(stat.category_id))
-              .sort(sortCategoryStats(categoryStats));
+  const allTopics = useMemo(() => [...firstHalfTopics, ...secondHalfTopics], [firstHalfTopics, secondHalfTopics]);
+  const categorySummaries = useMemo(() => {
+    const categoryMap = allTopics.reduce<Map<number, CategorySummary>>((acc, { topic, categories }) => {
+      categories.forEach(category => {
+        if (!acc.has(category.id)) {
+          acc.set(category.id, {
+            category,
+            count: 1,
+            topics: [topic],
           });
-          setUserStats(newStats);
+        } else {
+          const entry = acc.get(category.id)!;
+          entry.count += 1;
+          if (!entry.topics.includes(topic)) {
+            entry.topics.push(topic);
+          }
         }
-      );
-    };
+      });
+      return acc;
+    }, new Map());
 
-    if (selectedUserIds.length > 0) {
-      fetchUserStats();
-    }
-  }, [categoryIds, categoryStats, selectedUserIds]);
+    return Array.from(categoryMap.values()).sort((a, b) => {
+      if (b.count !== a.count) {
+        return b.count - a.count;
+      }
+      return a.category.name.localeCompare(b.category.name);
+    });
+  }, [allTopics]);
+  const categoryIds = useMemo(() => categorySummaries.map(catSum => catSum.category.id), [categorySummaries]);
+  const expandedCategoryIds = useMemo(() => flattenCategories(categorySummaries), [categorySummaries]);
+  const userIds = useMemo(() => users.map(u => u.id), [users]);
 
-  useEffect(() => {
-    const fetchAptitudes = async () => {
+  const userStatsQueries = useQueries({
+    queries: selectedUserIds.map(userId => ({
+      queryKey: ["userStats", userId, categoryIds],
+      queryFn: () =>
+        axios
+          .get<CategoryStat[]>(`/users/${userId}/stats/categories/`)
+          .then(res =>
+            res.data.filter(stat => categoryIds.includes(stat.category_id)).sort(sortCategoryStats(categorySummaries))
+          ),
+      enabled: selectedUserIds.length > 0,
+      staleTime: 15 * 60 * 1000, // 15 min cache
+    })),
+  });
+
+  const teamStatsQuery = useQuery({
+    queryKey: ["teamStats", team?.id, categoryIds],
+    queryFn: () =>
+      axios
+        .get<CategoryStat[]>(`/teams/${team!.id}/stats/categories/`)
+        .then(res =>
+          res.data.filter(stat => categoryIds.includes(stat.category_id)).sort(sortCategoryStats(categorySummaries))
+        ),
+    enabled: !!team,
+    staleTime: 15 * 60 * 1000, // 15 min cache
+  });
+
+  const userAptitudesQuery = useQuery({
+    queryKey: ["userAptitudes", userIds, expandedCategoryIds],
+    queryFn: () =>
       axios
         .post<UserAptitude[]>("/quizzes/predictor/order-of-play/", {
           user_ids: userIds,
@@ -65,44 +110,17 @@ export const Step4: React.FC<Props> = ({ categoryStats, team, users, onPrev }) =
             acc[user_id] = aptitude;
             return acc;
           }, {})
-        )
-        .then(setUserAptitudes);
-    };
-
-    if (expandedCategoryIds.length > 0 && userIds.length > 0) {
-      fetchAptitudes();
-    }
-  }, [expandedCategoryIds, userIds]);
-
-  useEffect(() => {
-    const fetchTeamStats = async () => {
-      if (!team) {
-        return;
-      }
-      axios
-        .get<CategoryStat[]>(`/teams/${team.id}/stats/categories/`)
-        .then(res =>
-          setTeamStats(
-            res.data.filter(stat => categoryIds.includes(stat.category_id)).sort(sortCategoryStats(categoryStats))
-          )
-        );
-    };
-
-    fetchTeamStats();
-  }, [categoryIds, categoryStats, team]);
-
-  const toggleTeam = async () => setIsTeamSelected(isSelected => !isSelected);
-  const toggleUser = async (userId: number) => {
-    const alreadySelected = selectedUserIds.includes(userId);
-    if (alreadySelected) {
-      setSelectedUserIds(ids => ids.filter(id => id !== userId));
-    } else {
-      setSelectedUserIds(ids => [...ids, userId]);
-    }
-  };
+        ),
+    enabled: userIds.length > 0 && expandedCategoryIds.length > 0,
+  });
 
   const datasets = useMemo(() => {
-    const users = team ? team.users.filter(u => selectedUserIds.includes(u.id)) : [];
+    const teamStats = teamStatsQuery.data || [];
+    const userStats: Record<number, CategoryStat[]> = {};
+    selectedUserIds.forEach((id, index) => {
+      userStats[id] = userStatsQueries[index]?.data || [];
+    });
+    const selectedUsers = team ? team.users.filter(u => selectedUserIds.includes(u.id)) : [];
     const data: DataSet[] = [];
     if (isTeamSelected && !!team) {
       data.push({
@@ -111,30 +129,35 @@ export const Step4: React.FC<Props> = ({ categoryStats, team, users, onPrev }) =
         data: teamStats,
       });
     }
-    return data.concat([
-      ...users.map((user, index) => ({
-        label: user.username,
-        color: colors[index % colors.length],
-        data: userStats[user.id] || [],
-      })),
-    ]);
-  }, [isTeamSelected, selectedUserIds, team, teamStats, userStats]);
+    data.push(
+      ...selectedUsers.map(user => {
+        const userIndex = users.findIndex(u => u.id === user.id); // stable index
+        const stats = userStats[user.id] || [];
+        return {
+          label: user.username,
+          color: colors[userIndex % colors.length],
+          data: stats,
+        };
+      })
+    );
+    return data;
+  }, [isTeamSelected, selectedUserIds, team, teamStatsQuery.data, userStatsQueries, users]);
+
+  const userAptitudes = userAptitudesQuery.data || {};
 
   return (
     <div>
-      <div className="flex flex-col lg:flex-row gap-6">
-        <div className="flex-1">
-          <h2 className="text-xl font-semibold mb-4">Review</h2>
-          {categoryStats.map(({ category, count, topics }) => (
-            <div key={category.id} className="mb-1">
-              <h3 className="font-bold">
-                {category.name} {count > 1 && `(x${count})`}
-              </h3>
-              <span className="font-extralight text-sm ml-4">{topics.join(", ")}</span>
-            </div>
-          ))}
-        </div>
+      <div className="flex flex-col lg:flex-row gap-2">
         <div className="flex-2">
+          <h2 className="text-xl font-semibold mb-4">Review</h2>
+          <ReviewModeRadioButton reviewMode={reviewMode} onChange={setReviewMode} />
+          {reviewMode === "categories" ? (
+            <CategoriesReview categories={categorySummaries} />
+          ) : (
+            <TopicsReview firstHalfTopics={firstHalfTopics} secondHalfTopics={secondHalfTopics} />
+          )}
+        </div>
+        <div className="flex-5">
           <CategoryStatsRadarChart datasets={datasets} />
           {!!team && (
             <div key={team.id} className="flex flex-row gap-1">
@@ -162,6 +185,7 @@ export const Step4: React.FC<Props> = ({ categoryStats, team, users, onPrev }) =
               })}
             </div>
           )}
+          <SortedTopics users={users} firstHalfTopics={firstHalfTopics} secondHalfTopics={secondHalfTopics} />
         </div>
       </div>
       <div className="mt-6 flex gap-4">

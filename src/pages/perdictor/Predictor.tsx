@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { Header } from "../../components/ui/PageHeader";
 import type { CategorizedTopic, CategorizeResponse } from "../../types/api";
-import type { CategorySummary } from "../../types/categories";
 import type { Team } from "../../types/user";
 import { Step1 } from "./Step1";
 import { Step2 } from "./Step2";
@@ -40,30 +39,6 @@ export const PredictorPage: React.FC = () => {
     return selectedTeam.users.filter(u => selectedUserIds.includes(u.id));
   }, [selectedTeam, selectedUserIds]);
 
-  const sortedCategories = useMemo(() => {
-    const mergedTopics = [...firstHalfTopics, ...secondHalfTopics];
-    const categoryMap = mergedTopics.reduce<Map<number, CategorySummary>>((acc, { topic, categories }) => {
-      categories.forEach(category => {
-        if (!acc.has(category.id)) {
-          acc.set(category.id, {
-            category,
-            count: 1,
-            topics: [topic],
-          });
-        } else {
-          const entry = acc.get(category.id)!;
-          entry.count += 1;
-          if (!entry.topics.includes(topic)) {
-            entry.topics.push(topic);
-          }
-        }
-      });
-      return acc;
-    }, new Map());
-
-    return Array.from(categoryMap.values()).sort((a, b) => b.count - a.count);
-  }, [firstHalfTopics, secondHalfTopics]);
-
   return (
     <div className="space-y-6">
       <Header title="Predictor" />
@@ -98,7 +73,13 @@ export const PredictorPage: React.FC = () => {
         />
       )}
       {step === 4 && (
-        <Step4 categoryStats={sortedCategories} team={selectedTeam} users={selectedUsers} onPrev={handlePrev} />
+        <Step4
+          firstHalfTopics={firstHalfTopics}
+          secondHalfTopics={secondHalfTopics}
+          team={selectedTeam}
+          users={selectedUsers}
+          onPrev={handlePrev}
+        />
       )}
     </div>
   );
