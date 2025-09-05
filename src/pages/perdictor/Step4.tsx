@@ -25,7 +25,7 @@ type Props = {
 };
 
 export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team, users, onPrev }) => {
-  const [isTeamSelected, setIsTeamSelected] = useState<boolean>(!!team);
+  const [isTeamSelected, setIsTeamSelected] = useState<boolean>(false);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>(users.map(u => u.id));
   const [userStats, setUserStats] = useState<Record<number, CategoryStat[]>>({});
   const [teamStats, setTeamStats] = useState<CategoryStat[]>([]);
@@ -152,8 +152,8 @@ export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team
 
   return (
     <div>
-      <div className="flex flex-col lg:flex-row gap-6">
-        <div className="flex-1">
+      <div className="flex flex-col lg:flex-row gap-2">
+        <div>
           <h2 className="text-xl font-semibold mb-4">Review</h2>
           {categorySummaries.map(({ category, count, topics }) => (
             <div key={category.id} className="mb-1">
@@ -164,7 +164,7 @@ export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team
             </div>
           ))}
         </div>
-        <div className="flex-2">
+        <div className="flex-1">
           <CategoryStatsRadarChart datasets={datasets} />
           {!!team && (
             <div key={team.id} className="flex flex-row gap-1">
