@@ -6,7 +6,6 @@ import { Login } from "./pages/Login";
 import { NotFound } from "./pages/NotFound";
 import { PlayPage } from "./pages/PlayPage";
 import { PlayQuizPage } from "./pages/PlayQuizPage";
-import { PredictionPage } from "./pages/Prediction";
 import { TeamPage } from "./pages/TeamPage";
 import { PredictorPage } from "./pages/perdictor/Predictor";
 
@@ -34,9 +33,9 @@ export const App = () => {
             <Link className="text-blue-600 hover:underline" to="/team">
               Team
             </Link>
-            {/* <Link className="text-blue-600 hover:underline" to="/prediction">
+            <Link className="text-blue-600 hover:underline" to="/predictor">
               Predictor
-            </Link> */}
+            </Link>
           </div>
           {accessToken && (
             <button onClick={handleLogout} className="text-sm text-white bg-red-500 px-3 py-1 rounded hover:bg-red-600">
@@ -56,7 +55,6 @@ export const App = () => {
             <Route path="/play/:quizId" element={<PlayQuizPage />} />
             <Route path="/team" element={<TeamPage />} />
             <Route path="/predictor" element={<PredictorPage />} />
-            <Route path="/prediction" element={<PredictionPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
