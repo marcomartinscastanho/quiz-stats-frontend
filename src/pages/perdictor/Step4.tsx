@@ -4,9 +4,8 @@ import axios from "../../auth/axios";
 import { CategoryStatsRadarChart } from "../../components/CategoryStatsRadarChart";
 import { Button } from "../../components/ui/Button";
 import { CategoriesReview } from "../../components/ui/CategoriesReview";
-import { HalfSeparator } from "../../components/ui/HalfSeparator";
 import { ReviewModeRadioButton } from "../../components/ui/ReviewModeRadioButton";
-import { SortedTopicsList } from "../../components/ui/SortedTopicsList";
+import { SortedTopics } from "../../components/ui/SortedTopics";
 import { StatToggle } from "../../components/ui/StatToggle";
 import { TopicsReview } from "../../components/ui/TopicsReview";
 import { colors } from "../../constants";
@@ -14,7 +13,6 @@ import { flattenCategories, sortCategoryStats } from "../../lib/utils";
 import type { CategorizedTopic } from "../../types/api";
 import type { CategoryStat, CategorySummary } from "../../types/categories";
 import type { UserAptitude } from "../../types/predictor";
-import type { XTResponse } from "../../types/topics";
 import type { Team, User } from "../../types/user";
 
 export type DataSet = {
@@ -72,13 +70,6 @@ export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team
   const categoryIds = useMemo(() => categorySummaries.map(catSum => catSum.category.id), [categorySummaries]);
   const expandedCategoryIds = useMemo(() => flattenCategories(categorySummaries), [categorySummaries]);
   const userIds = useMemo(() => users.map(u => u.id), [users]);
-  const userIdMap = useMemo(() => {
-    const map: Record<number, User> = {};
-    users.forEach(user => {
-      map[user.id] = user;
-    });
-    return map;
-  }, [users]);
 
   const userStatsQueries = useQueries({
     queries: selectedUserIds.map(userId => ({
@@ -122,27 +113,6 @@ export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team
         ),
     enabled: userIds.length > 0 && expandedCategoryIds.length > 0,
   });
-
-  function useXTQuery(topics: CategorizedTopic[], userIds: number[], halfLabel: "firstHalf" | "secondHalf") {
-    return useQuery<XTResponse>({
-      queryKey: ["topicsSort", halfLabel, userIds, topics.map(t => t.topic)],
-      queryFn: async () => {
-        const payload = {
-          user_ids: userIds,
-          topics: topics.map(t => ({
-            name: t.topic,
-            category_ids: t.categories.map(c => c.id),
-          })),
-        };
-        const res = await axios.post<XTResponse>("/quizzes/predictor/topics/sort/", payload);
-        return res.data;
-      },
-      enabled: userIds.length > 0 && topics.length > 0,
-      staleTime: 15 * 60 * 1000, // 15 minutes
-    });
-  }
-  const xtFirstHalfQuery = useXTQuery(firstHalfTopics, userIds, "firstHalf");
-  const xtSecondHalfQuery = useXTQuery(secondHalfTopics, userIds, "secondHalf");
 
   const datasets = useMemo(() => {
     const teamStats = teamStatsQuery.data || [];
@@ -215,27 +185,7 @@ export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team
               })}
             </div>
           )}
-          <div className="mt-4">
-            <h2 className="text-xl font-semibold">Sorted Topics</h2>
-            <HalfSeparator label="First Half" />
-            {!!xtFirstHalfQuery.data && (
-              <div className="flex flex-row gap-1">
-                <SortedTopicsList label="Team" topics={xtFirstHalfQuery.data.team.topics} />
-                {xtFirstHalfQuery.data.users.map(u => (
-                  <SortedTopicsList label={userIdMap[u.user_id].full_name} topics={u.topics} />
-                ))}
-              </div>
-            )}
-            <HalfSeparator label="Second Half" />
-            {!!xtSecondHalfQuery.data && (
-              <div className="flex flex-row gap-1">
-                <SortedTopicsList label="Team" topics={xtSecondHalfQuery.data.team.topics} />
-                {xtSecondHalfQuery.data.users.map(u => (
-                  <SortedTopicsList label={userIdMap[u.user_id].full_name} topics={u.topics} />
-                ))}
-              </div>
-            )}
-          </div>
+          <SortedTopics users={users} firstHalfTopics={firstHalfTopics} secondHalfTopics={secondHalfTopics} />
         </div>
       </div>
       <div className="mt-6 flex gap-4">
