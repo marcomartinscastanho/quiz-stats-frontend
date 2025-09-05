@@ -3,7 +3,10 @@ import { useMemo, useState } from "react";
 import axios from "../../auth/axios";
 import { CategoryStatsRadarChart } from "../../components/CategoryStatsRadarChart";
 import { Button } from "../../components/ui/Button";
+import { CategoriesReview } from "../../components/ui/CategoriesReview";
+import { ReviewModeRadioButton } from "../../components/ui/ReviewModeRadioButton";
 import { StatToggle } from "../../components/ui/StatToggle";
+import { TopicsReview } from "../../components/ui/TopicsReview";
 import { colors } from "../../constants";
 import { flattenCategories, sortCategoryStats } from "../../lib/utils";
 import type { CategorizedTopic } from "../../types/api";
@@ -143,18 +146,16 @@ export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team
   return (
     <div>
       <div className="flex flex-col lg:flex-row gap-2">
-        <div>
+        <div className="flex-2">
           <h2 className="text-xl font-semibold mb-4">Review</h2>
-          {categorySummaries.map(({ category, count, topics }) => (
-            <div key={category.id} className="mb-1">
-              <h3 className="font-bold">
-                {category.name} {count > 1 && `(x${count})`}
-              </h3>
-              <span className="font-extralight text-sm ml-4">{topics.join(", ")}</span>
-            </div>
-          ))}
+          <ReviewModeRadioButton reviewMode={reviewMode} onChange={setReviewMode} />
+          {reviewMode === "categories" ? (
+            <CategoriesReview categories={categorySummaries} />
+          ) : (
+            <TopicsReview firstHalfTopics={firstHalfTopics} secondHalfTopics={secondHalfTopics} />
+          )}
         </div>
-        <div className="flex-1">
+        <div className="flex-5">
           <CategoryStatsRadarChart datasets={datasets} />
           {!!team && (
             <div key={team.id} className="flex flex-row gap-1">
