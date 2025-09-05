@@ -38,7 +38,20 @@ export function flattenCategories(summaries: CategorySummary[]): number[] {
 }
 
 export const sortCategoryStats = (categoryStats: CategorySummary[]) => {
-  return (a: CategoryStat, b: CategoryStat) =>
-    (categoryStats.find(cs => cs.category.id == b.category_id)?.count || 0) -
-    (categoryStats.find(cs => cs.category.id == a.category_id)?.count || 0);
+  const lookup = new Map(categoryStats.map(cs => [cs.category.id, cs]));
+
+  return (a: CategoryStat, b: CategoryStat) => {
+    const entryA = lookup.get(a.category_id);
+    const entryB = lookup.get(b.category_id);
+
+    const countA = entryA?.count || 0;
+    const countB = entryB?.count || 0;
+    if (countB !== countA) {
+      return countB - countA;
+    }
+
+    const nameA = entryA?.category.name || "";
+    const nameB = entryB?.category.name || "";
+    return nameA.localeCompare(nameB);
+  };
 };

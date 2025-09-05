@@ -5,6 +5,7 @@ import { Button } from "../../components/ui/Button";
 import { StatToggle } from "../../components/ui/StatToggle";
 import { colors } from "../../constants";
 import { flattenCategories, sortCategoryStats } from "../../lib/utils";
+import type { CategorizedTopic } from "../../types/api";
 import type { CategoryStat, CategorySummary } from "../../types/categories";
 import type { UserAptitude } from "../../types/predictor";
 import type { Team, User } from "../../types/user";
@@ -18,20 +19,49 @@ export type DataSet = {
 type Props = {
   team: Team | null;
   users: User[];
-  categoryStats: CategorySummary[];
+  firstHalfTopics: CategorizedTopic[];
+  secondHalfTopics: CategorizedTopic[];
   onPrev: () => void;
 };
 
-export const Step4: React.FC<Props> = ({ categoryStats, team, users, onPrev }) => {
+export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team, users, onPrev }) => {
   const [isTeamSelected, setIsTeamSelected] = useState<boolean>(!!team);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>(users.map(u => u.id));
   const [userStats, setUserStats] = useState<Record<number, CategoryStat[]>>({});
   const [teamStats, setTeamStats] = useState<CategoryStat[]>([]);
   const [userAptitudes, setUserAptitudes] = useState<Record<number, number>>({});
 
-  const categoryIds = useMemo(() => categoryStats.map(stat => stat.category.id), [categoryStats]);
+  const allTopics = useMemo(() => [...firstHalfTopics, ...secondHalfTopics], [firstHalfTopics, secondHalfTopics]);
+  const categorySummaries = useMemo(() => {
+    const categoryMap = allTopics.reduce<Map<number, CategorySummary>>((acc, { topic, categories }) => {
+      categories.forEach(category => {
+        if (!acc.has(category.id)) {
+          acc.set(category.id, {
+            category,
+            count: 1,
+            topics: [topic],
+          });
+        } else {
+          const entry = acc.get(category.id)!;
+          entry.count += 1;
+          if (!entry.topics.includes(topic)) {
+            entry.topics.push(topic);
+          }
+        }
+      });
+      return acc;
+    }, new Map());
+
+    return Array.from(categoryMap.values()).sort((a, b) => {
+      if (b.count !== a.count) {
+        return b.count - a.count;
+      }
+      return a.category.name.localeCompare(b.category.name);
+    });
+  }, [allTopics]);
+  const categoryIds = useMemo(() => categorySummaries.map(catSum => catSum.category.id), [categorySummaries]);
   const userIds = useMemo(() => users.map(u => u.id), [users]);
-  const expandedCategoryIds = useMemo(() => flattenCategories(categoryStats), [categoryStats]);
+  const expandedCategoryIds = useMemo(() => flattenCategories(categorySummaries), [categorySummaries]);
 
   useEffect(() => {
     const fetchUserStats = async () => {
@@ -41,7 +71,7 @@ export const Step4: React.FC<Props> = ({ categoryStats, team, users, onPrev }) =
           selectedUserIds.forEach((id, index) => {
             newStats[id] = results[index].data
               .filter(stat => categoryIds.includes(stat.category_id))
-              .sort(sortCategoryStats(categoryStats));
+              .sort(sortCategoryStats(categorySummaries));
           });
           setUserStats(newStats);
         }
@@ -51,7 +81,7 @@ export const Step4: React.FC<Props> = ({ categoryStats, team, users, onPrev }) =
     if (selectedUserIds.length > 0) {
       fetchUserStats();
     }
-  }, [categoryIds, categoryStats, selectedUserIds]);
+  }, [categoryIds, categorySummaries, selectedUserIds]);
 
   useEffect(() => {
     const fetchAptitudes = async () => {
@@ -83,13 +113,13 @@ export const Step4: React.FC<Props> = ({ categoryStats, team, users, onPrev }) =
         .get<CategoryStat[]>(`/teams/${team.id}/stats/categories/`)
         .then(res =>
           setTeamStats(
-            res.data.filter(stat => categoryIds.includes(stat.category_id)).sort(sortCategoryStats(categoryStats))
+            res.data.filter(stat => categoryIds.includes(stat.category_id)).sort(sortCategoryStats(categorySummaries))
           )
         );
     };
 
     fetchTeamStats();
-  }, [categoryIds, categoryStats, team]);
+  }, [categoryIds, categorySummaries, team]);
 
   const toggleTeam = async () => setIsTeamSelected(isSelected => !isSelected);
   const toggleUser = async (userId: number) => {
@@ -125,7 +155,7 @@ export const Step4: React.FC<Props> = ({ categoryStats, team, users, onPrev }) =
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="flex-1">
           <h2 className="text-xl font-semibold mb-4">Review</h2>
-          {categoryStats.map(({ category, count, topics }) => (
+          {categorySummaries.map(({ category, count, topics }) => (
             <div key={category.id} className="mb-1">
               <h3 className="font-bold">
                 {category.name} {count > 1 && `(x${count})`}
