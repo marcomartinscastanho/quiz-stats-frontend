@@ -31,7 +31,7 @@ export const SortedTopics: FC<Props> = ({ users, firstHalfTopics, secondHalfTopi
         <div className="flex flex-row gap-1">
           <SortedTopicsList label="Team" topics={xtFirstHalfQuery.data.team.topics} />
           {xtFirstHalfQuery.data.users.map(u => (
-            <SortedTopicsList label={userIdMap[u.user_id].full_name} topics={u.topics} />
+            <SortedTopicsList label={userIdMap[u.user_id].username} topics={u.topics} />
           ))}
         </div>
       )}
@@ -40,7 +40,7 @@ export const SortedTopics: FC<Props> = ({ users, firstHalfTopics, secondHalfTopi
         <div className="flex flex-row gap-1">
           <SortedTopicsList label="Team" topics={xtSecondHalfQuery.data.team.topics} />
           {xtSecondHalfQuery.data.users.map(u => (
-            <SortedTopicsList label={userIdMap[u.user_id].full_name} topics={u.topics} />
+            <SortedTopicsList label={userIdMap[u.user_id].username} topics={u.topics} />
           ))}
         </div>
       )}

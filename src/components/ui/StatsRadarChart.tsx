@@ -34,7 +34,7 @@ export function GenericStatsRadarChart<T extends Record<string, string | number>
     const row: Record<string, string | number> = { [dataKey]: labelValue };
     datasets.forEach(ds => {
       const match = ds.data.find(item => item[dataKey] === labelValue);
-      row[ds.label] = match?.[valueKey] ?? 0;
+      row[ds.label] = Number(match?.[valueKey]).toFixed(1) ?? 0;
     });
     return row;
   });
