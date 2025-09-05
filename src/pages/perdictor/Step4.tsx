@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useQueries, useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
 import axios from "../../auth/axios";
 import { CategoryStatsRadarChart } from "../../components/CategoryStatsRadarChart";
 import { Button } from "../../components/ui/Button";
@@ -27,9 +28,6 @@ type Props = {
 export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team, users, onPrev }) => {
   const [isTeamSelected, setIsTeamSelected] = useState<boolean>(false);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>(users.map(u => u.id));
-  const [userStats, setUserStats] = useState<Record<number, CategoryStat[]>>({});
-  const [teamStats, setTeamStats] = useState<CategoryStat[]>([]);
-  const [userAptitudes, setUserAptitudes] = useState<Record<number, number>>({});
 
   const allTopics = useMemo(() => [...firstHalfTopics, ...secondHalfTopics], [firstHalfTopics, secondHalfTopics]);
   const categorySummaries = useMemo(() => {
@@ -60,31 +58,45 @@ export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team
     });
   }, [allTopics]);
   const categoryIds = useMemo(() => categorySummaries.map(catSum => catSum.category.id), [categorySummaries]);
-  const userIds = useMemo(() => users.map(u => u.id), [users]);
   const expandedCategoryIds = useMemo(() => flattenCategories(categorySummaries), [categorySummaries]);
+  const userIds = useMemo(() => users.map(u => u.id), [users]);
 
-  useEffect(() => {
-    const fetchUserStats = async () => {
-      Promise.all(selectedUserIds.map(userId => axios.get<CategoryStat[]>(`/users/${userId}/stats/categories/`))).then(
-        results => {
-          const newStats: Record<string, CategoryStat[]> = {};
-          selectedUserIds.forEach((id, index) => {
-            newStats[id] = results[index].data
-              .filter(stat => categoryIds.includes(stat.category_id))
-              .sort(sortCategoryStats(categorySummaries));
-          });
-          setUserStats(newStats);
-        }
-      );
-    };
+  const userStatsQueries = useQueries({
+    queries: selectedUserIds.map(userId => ({
+      queryKey: ["userStats", userId, categoryIds],
+      queryFn: () =>
+        axios
+          .get<CategoryStat[]>(`/users/${userId}/stats/categories/`)
+          .then(res =>
+            res.data.filter(stat => categoryIds.includes(stat.category_id)).sort(sortCategoryStats(categorySummaries))
+          ),
+      enabled: selectedUserIds.length > 0,
+      staleTime: 15 * 60 * 1000, // 15 min cache
+    })),
+  });
+  const userStats: Record<number, CategoryStat[]> = useMemo(() => {
+    const stats: Record<number, CategoryStat[]> = {};
+    selectedUserIds.forEach((id, index) => {
+      stats[id] = userStatsQueries[index]?.data || [];
+    });
+    return stats;
+  }, [userStatsQueries, selectedUserIds]);
 
-    if (selectedUserIds.length > 0) {
-      fetchUserStats();
-    }
-  }, [categoryIds, categorySummaries, selectedUserIds]);
+  const teamStatsQuery = useQuery({
+    queryKey: ["teamStats", team?.id, categoryIds],
+    queryFn: () =>
+      axios
+        .get<CategoryStat[]>(`/teams/${team!.id}/stats/categories/`)
+        .then(res =>
+          res.data.filter(stat => categoryIds.includes(stat.category_id)).sort(sortCategoryStats(categorySummaries))
+        ),
+    enabled: !!team,
+    staleTime: 15 * 60 * 1000, // 15 min cache
+  });
 
-  useEffect(() => {
-    const fetchAptitudes = async () => {
+  const userAptitudesQuery = useQuery({
+    queryKey: ["userAptitudes", userIds, expandedCategoryIds],
+    queryFn: () =>
       axios
         .post<UserAptitude[]>("/quizzes/predictor/order-of-play/", {
           user_ids: userIds,
@@ -95,44 +107,20 @@ export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team
             acc[user_id] = aptitude;
             return acc;
           }, {})
-        )
-        .then(setUserAptitudes);
-    };
+        ),
+    enabled: userIds.length > 0 && expandedCategoryIds.length > 0,
+  });
 
-    if (expandedCategoryIds.length > 0 && userIds.length > 0) {
-      fetchAptitudes();
-    }
-  }, [expandedCategoryIds, userIds]);
+  const userAptitudes = userAptitudesQuery.data || {};
 
-  useEffect(() => {
-    const fetchTeamStats = async () => {
-      if (!team) {
-        return;
-      }
-      axios
-        .get<CategoryStat[]>(`/teams/${team.id}/stats/categories/`)
-        .then(res =>
-          setTeamStats(
-            res.data.filter(stat => categoryIds.includes(stat.category_id)).sort(sortCategoryStats(categorySummaries))
-          )
-        );
-    };
-
-    fetchTeamStats();
-  }, [categoryIds, categorySummaries, team]);
-
-  const toggleTeam = async () => setIsTeamSelected(isSelected => !isSelected);
-  const toggleUser = async (userId: number) => {
-    const alreadySelected = selectedUserIds.includes(userId);
-    if (alreadySelected) {
-      setSelectedUserIds(ids => ids.filter(id => id !== userId));
-    } else {
-      setSelectedUserIds(ids => [...ids, userId]);
-    }
+  const toggleTeam = () => setIsTeamSelected(sel => !sel);
+  const toggleUser = (userId: number) => {
+    setSelectedUserIds(ids => (ids.includes(userId) ? ids.filter(id => id !== userId) : [...ids, userId]));
   };
 
   const datasets = useMemo(() => {
-    const users = team ? team.users.filter(u => selectedUserIds.includes(u.id)) : [];
+    const teamStats = teamStatsQuery.data || [];
+    const selectedUsers = team ? team.users.filter(u => selectedUserIds.includes(u.id)) : [];
     const data: DataSet[] = [];
     if (isTeamSelected && !!team) {
       data.push({
@@ -142,13 +130,13 @@ export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team
       });
     }
     return data.concat([
-      ...users.map((user, index) => ({
+      ...selectedUsers.map((user, index) => ({
         label: user.username,
         color: colors[index % colors.length],
         data: userStats[user.id] || [],
       })),
     ]);
-  }, [isTeamSelected, selectedUserIds, team, teamStats, userStats]);
+  }, [isTeamSelected, selectedUserIds, team, teamStatsQuery.data, userStats]);
 
   return (
     <div>
