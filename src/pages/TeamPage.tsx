@@ -14,8 +14,8 @@ export const TeamPage = () => {
   const { teamColors, userColors } = useChartColors(teams, users);
   const [selectedTeamIds, setSelectedTeamIds] = useState<number[]>([]);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
-  const [teamsStats, setTeamsStats] = useState<Record<number, CategoryGroupStat[]>>({});
-  const [usersStats, setUsersStats] = useState<Record<number, CategoryGroupStat[]>>({});
+  const [teamsGroupStats, setTeamsGroupStats] = useState<Record<number, CategoryGroupStat[]>>({});
+  const [usersGroupStats, setUsersGroupStats] = useState<Record<number, CategoryGroupStat[]>>({});
 
   const toggleTeam = async (teamId: number) => {
     const alreadySelected = selectedTeamIds.includes(teamId);
@@ -23,9 +23,9 @@ export const TeamPage = () => {
       setSelectedTeamIds(ids => ids.filter(id => id !== teamId));
     } else {
       setSelectedTeamIds(ids => [...ids, teamId]);
-      if (!teamsStats[teamId]) {
+      if (!teamsGroupStats[teamId]) {
         const res = await axios.get<CategoryGroupStat[]>(`/teams/${teamId}/stats/category-groups/`);
-        setTeamsStats(stats => ({ ...stats, [teamId]: res.data }));
+        setTeamsGroupStats(stats => ({ ...stats, [teamId]: res.data }));
       }
     }
   };
@@ -36,9 +36,9 @@ export const TeamPage = () => {
       setSelectedUserIds(ids => ids.filter(id => id !== userId));
     } else {
       setSelectedUserIds(ids => [...ids, userId]);
-      if (!usersStats[userId]) {
+      if (!usersGroupStats[userId]) {
         const res = await axios.get<CategoryGroupStat[]>(`/users/${userId}/stats/category-groups/`);
-        setUsersStats(stats => ({ ...stats, [userId]: res.data }));
+        setUsersGroupStats(stats => ({ ...stats, [userId]: res.data }));
       }
     }
   };
@@ -48,7 +48,7 @@ export const TeamPage = () => {
 
     const fetchMyStats = async (id: number) => {
       const res = await axios.get<CategoryGroupStat[]>(`/users/${id}/stats/category-groups/`);
-      setUsersStats(stats => ({ ...stats, [id]: res.data }));
+      setUsersGroupStats(stats => ({ ...stats, [id]: res.data }));
     };
 
     if (me) {
@@ -110,8 +110,8 @@ export const TeamPage = () => {
         users={users}
         selectedTeamIds={selectedTeamIds}
         selectedUserIds={selectedUserIds}
-        teamsStats={teamsStats}
-        usersStats={usersStats}
+        teamsStats={teamsGroupStats}
+        usersStats={usersGroupStats}
       />
     </div>
   );
