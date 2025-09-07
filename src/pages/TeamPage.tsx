@@ -1,3 +1,4 @@
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import axios from "../auth/axios";
 import { useAuth } from "../auth/useAuth";
@@ -9,66 +10,64 @@ import type { Team, User } from "../types/user";
 
 export const TeamPage = () => {
   const { user: me } = useAuth();
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const { teamColors, userColors } = useChartColors(teams, users);
   const [selectedTeamIds, setSelectedTeamIds] = useState<number[]>([]);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
-  const [teamsGroupStats, setTeamsGroupStats] = useState<Record<number, CategoryGroupStat[]>>({});
-  const [usersGroupStats, setUsersGroupStats] = useState<Record<number, CategoryGroupStat[]>>({});
 
-  const toggleTeam = async (teamId: number) => {
-    const alreadySelected = selectedTeamIds.includes(teamId);
-    if (alreadySelected) {
-      setSelectedTeamIds(ids => ids.filter(id => id !== teamId));
-    } else {
-      setSelectedTeamIds(ids => [...ids, teamId]);
-      if (!teamsGroupStats[teamId]) {
-        const res = await axios.get<CategoryGroupStat[]>(`/teams/${teamId}/stats/category-groups/`);
-        setTeamsGroupStats(stats => ({ ...stats, [teamId]: res.data }));
-      }
-    }
+  // Fetch users
+  const { data: users = [] } = useQuery<User[]>({
+    queryKey: ["users"],
+    queryFn: () => axios.get("/users/").then(res => res.data),
+    enabled: !!me,
+  });
+
+  // Fetch my teams
+  const { data: teams = [] } = useQuery<Team[]>({
+    queryKey: ["myTeams"],
+    queryFn: () => axios.get("/users/me/teams/").then(res => res.data),
+    enabled: !!me,
+  });
+
+  // Chart colors
+  const { teamColors, userColors } = useChartColors(teams, users);
+
+  // Fetch team stats
+  const fetchTeamStats = (teamId: number) =>
+    axios.get<CategoryGroupStat[]>(`/teams/${teamId}/stats/category-groups/`).then(res => res.data);
+  const teamsGroupStatsQueries = useQueries({
+    queries: selectedTeamIds.map(teamId => ({
+      queryKey: ["teamsGroupStats", teamId],
+      queryFn: () => fetchTeamStats(teamId),
+      enabled: selectedTeamIds.includes(teamId),
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+  const teamsGroupStats = Object.fromEntries(teamsGroupStatsQueries.map((q, i) => [selectedTeamIds[i], q.data || []]));
+
+  // Fetch user stats
+  const fetchUserStats = (userId: number) =>
+    axios.get<CategoryGroupStat[]>(`/users/${userId}/stats/category-groups/`).then(res => res.data);
+  const usersGroupStatsQueries = useQueries({
+    queries: selectedUserIds.map(userId => ({
+      queryKey: ["usersGroupStats", userId],
+      queryFn: () => fetchUserStats(userId),
+      enabled: selectedUserIds.includes(userId),
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+  const usersGroupStats = Object.fromEntries(usersGroupStatsQueries.map((q, i) => [selectedUserIds[i], q.data || []]));
+
+  // Toggle functions
+  const toggleTeam = (teamId: number) => {
+    setSelectedTeamIds(ids => (ids.includes(teamId) ? ids.filter(id => id !== teamId) : [...ids, teamId]));
   };
-
-  const toggleUser = async (userId: number) => {
-    const alreadySelected = selectedUserIds.includes(userId);
-    if (alreadySelected) {
-      setSelectedUserIds(ids => ids.filter(id => id !== userId));
-    } else {
-      setSelectedUserIds(ids => [...ids, userId]);
-      if (!usersGroupStats[userId]) {
-        const res = await axios.get<CategoryGroupStat[]>(`/users/${userId}/stats/category-groups/`);
-        setUsersGroupStats(stats => ({ ...stats, [userId]: res.data }));
-      }
-    }
+  const toggleUser = (userId: number) => {
+    setSelectedUserIds(ids => (ids.includes(userId) ? ids.filter(id => id !== userId) : [...ids, userId]));
   };
 
   useEffect(() => {
-    if (!me) return;
-
-    const fetchMyStats = async (id: number) => {
-      const res = await axios.get<CategoryGroupStat[]>(`/users/${id}/stats/category-groups/`);
-      setUsersGroupStats(stats => ({ ...stats, [id]: res.data }));
-    };
-
     if (me) {
       setSelectedUserIds(ids => (ids.includes(me.id) ? ids : [...ids, me.id]));
-      fetchMyStats(me.id);
     }
-  }, [me]);
-
-  useEffect(() => {
-    if (!me) return;
-
-    const fetchUsersAndMyTeams = async () => {
-      const [usersRes, myTeamsRes] = await Promise.all([
-        axios.get<User[]>("/users/"),
-        axios.get<Team[]>("/users/me/teams/"),
-      ]);
-      setUsers(usersRes.data);
-      setTeams(myTeamsRes.data);
-    };
-    fetchUsersAndMyTeams();
   }, [me]);
 
   return (
