@@ -118,7 +118,7 @@ export const PlayQuizPage = () => {
               ) : (
                 <div className="text-muted-foreground text-md md:text-xl font-bold text-red-700 mb-1">Time's up!</div>
               )}
-              <p className="text-xs text-muted-foreground mt-1">Decide your answer first—then check</p>
+              <p className="text-xs text-muted-foreground mt-1">Decide your answer first — then check</p>
               <Button className="p-8 md:p-10 text-xl md:text-3xl" onClick={() => setReveal(true)}>
                 Show Answer
               </Button>
