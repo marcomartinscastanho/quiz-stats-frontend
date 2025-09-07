@@ -1,16 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "../auth/axios";
 import { useAuth } from "../auth/useAuth";
 import { GroupStatsRadarChart } from "../components/GroupStatsRadarChart";
 import { StatToggle } from "../components/ui/StatToggle";
-import { colors } from "../constants";
+import { useChartColors } from "../lib/useChartColours";
 import type { CategoryGroupStat } from "../types/categories";
 import type { Team, User } from "../types/user";
 
 export const TeamPage = () => {
   const { user: me } = useAuth();
+
   const [teams, setTeams] = useState<Team[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const { teamColors, userColors } = useChartColors(teams, users);
   const [selectedTeamIds, setSelectedTeamIds] = useState<number[]>([]);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
   const [teamStats, setTeamStats] = useState<Record<number, CategoryGroupStat[]>>({});
@@ -66,35 +68,6 @@ export const TeamPage = () => {
     fetchUsersAndMyTeams();
   }, []);
 
-  const teamColors = useMemo(() => {
-    const map: Record<number, string> = {};
-    teams.forEach((team, index) => {
-      map[team.id] = colors.slice().reverse()[index % colors.length];
-    });
-    return map;
-  }, [teams]);
-
-  const userColors = useMemo(() => {
-    const map: Record<number, string> = {};
-    users.forEach((user, index) => {
-      map[user.id] = colors[index % colors.length];
-    });
-    return map;
-  }, [users]);
-
-  const datasets = [
-    ...selectedTeamIds.map(id => ({
-      label: teams.find(t => t.id === id)?.name || `Team ${id}`,
-      color: teamColors[id],
-      data: teamStats[id] || [],
-    })),
-    ...selectedUserIds.map(id => ({
-      label: users.find(u => u.id === id)?.username || `User ${id}`,
-      color: userColors[id],
-      data: userStats[id] || [],
-    })),
-  ];
-
   return (
     <div className="flex flex-col md:flex-row gap-6">
       <div className="md:w-1/3 flex flex-col gap-1 md:gap-2 divide-y divide-solid divide-gray-300">
@@ -129,7 +102,14 @@ export const TeamPage = () => {
           );
         })}
       </div>
-      <GroupStatsRadarChart datasets={datasets} />
+      <GroupStatsRadarChart
+        teams={teams}
+        users={users}
+        selectedTeamIds={selectedTeamIds}
+        selectedUserIds={selectedUserIds}
+        teamStats={teamStats}
+        userStats={userStats}
+      />
     </div>
   );
 };
