@@ -19,14 +19,14 @@ export const StatToggle: React.FC<StatToggleProps> = ({
 }) => {
   return (
     <div
-      className={`flex gap-2 cursor-pointer border px-2 py-1 md:p-4 rounded shadow transition ${isSelected ? "bg-blue-100" : "bg-white"}`}
+      className={`flex justify-between cursor-pointer border px-2 py-1 md:p-4 rounded shadow transition ${isSelected ? "bg-blue-100" : "bg-white"}`}
       onClick={() => onToggle(id)}
     >
-      <div className="flex-1 flex flex-col justify-center">
+      <div className="flex flex-col justify-center">
         <h2 className="font-semibold">{title || subtitle}</h2>
         {subtitle && <p className="text-sm text-gray-600">{subtitle}</p>}
       </div>
-      <div className="flex-1 flex flex-col justify-center gap-2">
+      <div className=" flex flex-col justify-center gap-2">
         {!!aptitude && (
           <div className="text-sm text-gray-600 text-center">
             <span>
