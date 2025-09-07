@@ -45,6 +45,8 @@ export const TeamPage = () => {
   };
 
   useEffect(() => {
+    if (!me) return;
+
     const fetchMyStats = async (id: number) => {
       const res = await axios.get<CategoryGroupStat[]>(`/users/${id}/stats/category-groups/`);
       setUserStats(stats => ({ ...stats, [id]: res.data }));
@@ -57,6 +59,8 @@ export const TeamPage = () => {
   }, [me]);
 
   useEffect(() => {
+    if (!me) return;
+
     const fetchUsersAndMyTeams = async () => {
       const [usersRes, myTeamsRes] = await Promise.all([
         axios.get<User[]>("/users/"),
@@ -66,7 +70,7 @@ export const TeamPage = () => {
       setTeams(myTeamsRes.data);
     };
     fetchUsersAndMyTeams();
-  }, []);
+  }, [me]);
 
   return (
     <div className="flex flex-col md:flex-row gap-6">
