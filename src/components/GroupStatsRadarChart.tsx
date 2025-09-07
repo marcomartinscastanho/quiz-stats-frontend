@@ -1,4 +1,5 @@
 import { useMemo, type FC } from "react";
+import { useCategoryGroups } from "../lib/useCategoryGroups";
 import { useChartColors } from "../lib/useChartColours";
 import type { CategoryGroupStat } from "../types/categories";
 import type { Team, User } from "../types/user";
@@ -11,6 +12,7 @@ type Props = {
   selectedUserIds: number[];
   teamsStats: Record<number, CategoryGroupStat[]>;
   usersStats: Record<number, CategoryGroupStat[]>;
+  onGroupClick: (id: number) => void;
 };
 
 export const GroupStatsRadarChart: FC<Props> = ({
@@ -20,7 +22,9 @@ export const GroupStatsRadarChart: FC<Props> = ({
   selectedUserIds,
   teamsStats,
   usersStats,
+  onGroupClick,
 }) => {
+  const { categoryGroups } = useCategoryGroups();
   const { teamColors, userColors } = useChartColors(teams, users);
 
   const datasets = useMemo(() => {
@@ -52,7 +56,7 @@ export const GroupStatsRadarChart: FC<Props> = ({
       datasets={datasets}
       dataKey="group_name"
       valueKey="xC"
-      onLabelClick={tick => console.log("PolarAngleAxis click", tick)}
+      onLabelClick={tick => onGroupClick(categoryGroups[tick.index].id)}
     />
   );
 };

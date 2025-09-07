@@ -115,7 +115,7 @@ export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team
     enabled: userIds.length > 0 && expandedCategoryIds.length > 0,
   });
 
-  const teams = useMemo(() => (team ? [team] : []), [team]);
+  const teams = useMemo(() => (team && isTeamSelected ? [team] : []), [isTeamSelected, team]);
   const selectedTeamIds = useMemo(() => teams.map(t => t.id), [teams]);
   const teamsStats = useMemo(
     () => Object.fromEntries(selectedTeamIds.map(id => [id, teamStatsQuery.data || []])),

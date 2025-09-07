@@ -2,16 +2,21 @@ import { useQueries, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import axios from "../auth/axios";
 import { useAuth } from "../auth/useAuth";
+import { CategoryStatsRadarChart } from "../components/CategoryStatsRadarChart";
 import { GroupStatsRadarChart } from "../components/GroupStatsRadarChart";
+import { Button } from "../components/ui/button/Button";
 import { StatToggle } from "../components/ui/StatToggle";
+import { useCategoryGroups } from "../lib/useCategoryGroups";
 import { useChartColors } from "../lib/useChartColours";
-import type { CategoryGroupStat } from "../types/categories";
+import type { CategoryGroupStat, CategoryStat } from "../types/categories";
 import type { Team, User } from "../types/user";
 
 export const TeamPage = () => {
   const { user: me } = useAuth();
   const [selectedTeamIds, setSelectedTeamIds] = useState<number[]>([]);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState<number>();
+  const { categoryGroupsById } = useCategoryGroups();
 
   // Fetch users
   const { data: users = [] } = useQuery<User[]>({
@@ -31,30 +36,76 @@ export const TeamPage = () => {
   const { teamColors, userColors } = useChartColors(teams, users);
 
   // Fetch team stats
-  const fetchTeamStats = (teamId: number) =>
+  const fetchTeamGroupStats = (teamId: number) =>
     axios.get<CategoryGroupStat[]>(`/teams/${teamId}/stats/category-groups/`).then(res => res.data);
+  const fetchTeamCategoryStats = (teamId: number) =>
+    axios.get<CategoryStat[]>(`/teams/${teamId}/stats/categories/`).then(res => res.data);
   const teamsGroupStatsQueries = useQueries({
     queries: selectedTeamIds.map(teamId => ({
       queryKey: ["teamsGroupStats", teamId],
-      queryFn: () => fetchTeamStats(teamId),
+      queryFn: () => fetchTeamGroupStats(teamId),
       enabled: selectedTeamIds.includes(teamId),
       staleTime: 5 * 60 * 1000,
     })),
   });
+  const teamsCategoryStatsQueries = useQueries({
+    queries: selectedTeamIds.map(teamId => ({
+      queryKey: ["teamsCategoryStats", teamId],
+      queryFn: () => fetchTeamCategoryStats(teamId),
+      enabled: selectedGroupId !== undefined && selectedTeamIds.includes(teamId),
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
   const teamsGroupStats = Object.fromEntries(teamsGroupStatsQueries.map((q, i) => [selectedTeamIds[i], q.data || []]));
+  const teamsCategoryStats = Object.fromEntries(
+    teamsCategoryStatsQueries.map((q, i) => [
+      selectedTeamIds[i],
+      (q.data || []).filter(
+        stat =>
+          selectedGroupId !== undefined &&
+          categoryGroupsById
+            .get(selectedGroupId)
+            ?.categories.map(c => c.id)
+            .includes(stat.category_id)
+      ),
+    ])
+  );
 
   // Fetch user stats
-  const fetchUserStats = (userId: number) =>
+  const fetchUserGroupStats = (userId: number) =>
     axios.get<CategoryGroupStat[]>(`/users/${userId}/stats/category-groups/`).then(res => res.data);
+  const fetchUserCategoryStats = (userId: number) =>
+    axios.get<CategoryStat[]>(`/users/${userId}/stats/categories/`).then(res => res.data);
   const usersGroupStatsQueries = useQueries({
     queries: selectedUserIds.map(userId => ({
       queryKey: ["usersGroupStats", userId],
-      queryFn: () => fetchUserStats(userId),
+      queryFn: () => fetchUserGroupStats(userId),
       enabled: selectedUserIds.includes(userId),
       staleTime: 5 * 60 * 1000,
     })),
   });
+  const usersCategoryStatsQueries = useQueries({
+    queries: selectedUserIds.map(userId => ({
+      queryKey: ["usersCategoryStats", userId],
+      queryFn: () => fetchUserCategoryStats(userId),
+      enabled: selectedGroupId !== undefined && selectedUserIds.includes(userId),
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
   const usersGroupStats = Object.fromEntries(usersGroupStatsQueries.map((q, i) => [selectedUserIds[i], q.data || []]));
+  const usersCategoryStats = Object.fromEntries(
+    usersCategoryStatsQueries.map((q, i) => [
+      selectedUserIds[i],
+      (q.data || []).filter(
+        stat =>
+          selectedGroupId !== undefined &&
+          categoryGroupsById
+            .get(selectedGroupId)
+            ?.categories.map(c => c.id)
+            .includes(stat.category_id)
+      ),
+    ])
+  );
 
   // Toggle functions
   const toggleTeam = (teamId: number) => {
@@ -104,14 +155,33 @@ export const TeamPage = () => {
           );
         })}
       </div>
-      <GroupStatsRadarChart
-        teams={teams}
-        users={users}
-        selectedTeamIds={selectedTeamIds}
-        selectedUserIds={selectedUserIds}
-        teamsStats={teamsGroupStats}
-        usersStats={usersGroupStats}
-      />
+      <div className="flex flex-col flex-1">
+        {selectedGroupId === undefined ? (
+          <GroupStatsRadarChart
+            teams={teams}
+            users={users}
+            selectedTeamIds={selectedTeamIds}
+            selectedUserIds={selectedUserIds}
+            teamsStats={teamsGroupStats}
+            usersStats={usersGroupStats}
+            onGroupClick={id => setSelectedGroupId(id)}
+          />
+        ) : (
+          <>
+            <CategoryStatsRadarChart
+              teams={teams}
+              users={users}
+              selectedTeamIds={selectedTeamIds}
+              selectedUserIds={selectedUserIds}
+              teamsStats={teamsCategoryStats}
+              usersStats={usersCategoryStats}
+            />
+            <Button variant="secondary" onClick={() => setSelectedGroupId(undefined)}>
+              Back
+            </Button>
+          </>
+        )}
+      </div>
     </div>
   );
 };

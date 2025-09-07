@@ -5,8 +5,8 @@ import Select from "react-select";
 import axios from "../auth/axios";
 import { Button } from "../components/ui/button/Button";
 import { Card, CardContent } from "../components/ui/Card";
+import { useCategoryGroups } from "../lib/useCategoryGroups";
 import { estimateReadingTime, formatTime } from "../lib/utils";
-import type { CategoryGroup } from "../types/categories";
 import type { Quiz } from "../types/quizzes";
 
 export const PlayQuizPage = () => {
@@ -14,8 +14,8 @@ export const PlayQuizPage = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [reveal, setReveal] = useState(false);
   const [timeLeft, setTimeLeft] = useState(20);
-
   const { quizId } = useParams<{ quizId: string }>();
+  const { categoryGroups } = useCategoryGroups();
 
   const { data: quiz, isLoading } = useQuery<Quiz>({
     queryKey: ["quiz", quizId],
@@ -24,14 +24,6 @@ export const PlayQuizPage = () => {
       return res.data;
     },
     enabled: !!quizId,
-  });
-
-  const { data: categoryGroups } = useQuery<CategoryGroup[]>({
-    queryKey: ["category-groups"],
-    queryFn: async () => {
-      const res = await axios.get("/quizzes/categories/groups/");
-      return res.data;
-    },
   });
 
   const flatQuestions = useMemo(() => {
