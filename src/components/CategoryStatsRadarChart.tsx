@@ -5,36 +5,37 @@ import type { Team, User } from "../types/user";
 import { GenericStatsRadarChart } from "./ui/StatsRadarChart";
 
 type Props = {
-  team: Team | null;
+  teams: Team[];
   users: User[];
+  selectedTeamIds: number[];
   selectedUserIds: number[];
-  isTeamSelected: boolean;
-  teamStats: CategoryStat[];
+  teamsStats: Record<number, CategoryStat[]>;
   usersStats: Record<number, CategoryStat[]>;
 };
 
 export const CategoryStatsRadarChart: FC<Props> = ({
-  team,
+  teams,
   users,
+  selectedTeamIds,
   selectedUserIds,
-  isTeamSelected,
-  teamStats,
+  teamsStats,
   usersStats,
 }) => {
-  const { teamColors, userColors } = useChartColors(team ? [team] : [], users);
+  const { teamColors, userColors } = useChartColors(teams, users);
 
   const datasets = useMemo(() => {
     const data: { label: string; color: string; data: CategoryStat[] }[] = [];
 
-    if (team && isTeamSelected) {
+    const selectedTeams = teams.filter(t => selectedTeamIds.includes(t.id));
+    selectedTeams.forEach(team => {
       data.push({
         label: team.name,
         color: teamColors[team.id],
-        data: teamStats,
+        data: teamsStats[team.id] || [],
       });
-    }
+    });
 
-    const selectedUsers = team ? team.users.filter(u => selectedUserIds.includes(u.id)) : [];
+    const selectedUsers = users.filter(u => selectedUserIds.includes(u.id));
     selectedUsers.forEach(user => {
       data.push({
         label: user.username,
@@ -44,7 +45,7 @@ export const CategoryStatsRadarChart: FC<Props> = ({
     });
 
     return data;
-  }, [team, isTeamSelected, teamColors, teamStats, selectedUserIds, userColors, usersStats]);
+  }, [teams, users, selectedTeamIds, teamColors, teamsStats, selectedUserIds, userColors, usersStats]);
 
   return <GenericStatsRadarChart datasets={datasets} dataKey="category_name" valueKey="xC" />;
 };

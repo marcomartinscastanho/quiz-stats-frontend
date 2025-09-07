@@ -1,4 +1,4 @@
-import { type FC } from "react";
+import { useMemo, type FC } from "react";
 import { useChartColors } from "../lib/useChartColours";
 import type { CategoryGroupStat } from "../types/categories";
 import type { Team, User } from "../types/user";
@@ -9,8 +9,8 @@ type Props = {
   users: User[];
   selectedTeamIds: number[];
   selectedUserIds: number[];
-  teamStats: Record<number, CategoryGroupStat[]>;
-  userStats: Record<number, CategoryGroupStat[]>;
+  teamsStats: Record<number, CategoryGroupStat[]>;
+  usersStats: Record<number, CategoryGroupStat[]>;
 };
 
 export const GroupStatsRadarChart: FC<Props> = ({
@@ -18,22 +18,41 @@ export const GroupStatsRadarChart: FC<Props> = ({
   users,
   selectedTeamIds,
   selectedUserIds,
-  teamStats,
-  userStats,
+  teamsStats,
+  usersStats,
 }) => {
   const { teamColors, userColors } = useChartColors(teams, users);
-  const datasets = [
-    ...selectedTeamIds.map(id => ({
-      label: teams.find(t => t.id === id)?.name || `Team ${id}`,
-      color: teamColors[id],
-      data: teamStats[id] || [],
-    })),
-    ...selectedUserIds.map(id => ({
-      label: users.find(u => u.id === id)?.username || `User ${id}`,
-      color: userColors[id],
-      data: userStats[id] || [],
-    })),
-  ];
 
-  return <GenericStatsRadarChart datasets={datasets} dataKey="group_name" valueKey="xC" />;
+  const datasets = useMemo(() => {
+    const data: { label: string; color: string; data: CategoryGroupStat[] }[] = [];
+
+    const selectedTeams = teams.filter(t => selectedTeamIds.includes(t.id));
+    selectedTeams.forEach(team => {
+      data.push({
+        label: team.name,
+        color: teamColors[team.id],
+        data: teamsStats[team.id] || [],
+      });
+    });
+
+    const selectedUsers = users.filter(u => selectedUserIds.includes(u.id));
+    selectedUsers.forEach(user => {
+      data.push({
+        label: user.username,
+        color: userColors[user.id],
+        data: usersStats[user.id] || [],
+      });
+    });
+
+    return data;
+  }, [teams, users, selectedTeamIds, teamColors, teamsStats, selectedUserIds, userColors, usersStats]);
+
+  return (
+    <GenericStatsRadarChart
+      datasets={datasets}
+      dataKey="group_name"
+      valueKey="xC"
+      onLabelClick={tick => console.log("PolarAngleAxis click", tick)}
+    />
+  );
 };

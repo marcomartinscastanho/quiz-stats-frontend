@@ -115,6 +115,12 @@ export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team
     enabled: userIds.length > 0 && expandedCategoryIds.length > 0,
   });
 
+  const teams = useMemo(() => (team ? [team] : []), [team]);
+  const selectedTeamIds = useMemo(() => teams.map(t => t.id), [teams]);
+  const teamsStats = useMemo(
+    () => Object.fromEntries(selectedTeamIds.map(id => [id, teamStatsQuery.data || []])),
+    [selectedTeamIds, teamStatsQuery.data]
+  );
   const usersStats = useMemo(
     () => Object.fromEntries(selectedUserIds.map((id, index) => [id, userStatsQueries[index]?.data || []])),
     [selectedUserIds, userStatsQueries]
@@ -136,11 +142,11 @@ export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team
         </div>
         <div className="flex-5">
           <CategoryStatsRadarChart
-            team={team}
+            teams={teams}
             users={users}
+            selectedTeamIds={selectedTeamIds}
             selectedUserIds={selectedUserIds}
-            isTeamSelected={isTeamSelected}
-            teamStats={teamStatsQuery.data || []}
+            teamsStats={teamsStats}
             usersStats={usersStats}
           />
           {!!team && (

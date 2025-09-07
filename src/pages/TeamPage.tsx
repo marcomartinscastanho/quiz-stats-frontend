@@ -9,14 +9,13 @@ import type { Team, User } from "../types/user";
 
 export const TeamPage = () => {
   const { user: me } = useAuth();
-
   const [teams, setTeams] = useState<Team[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const { teamColors, userColors } = useChartColors(teams, users);
   const [selectedTeamIds, setSelectedTeamIds] = useState<number[]>([]);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
-  const [teamStats, setTeamStats] = useState<Record<number, CategoryGroupStat[]>>({});
-  const [userStats, setUserStats] = useState<Record<number, CategoryGroupStat[]>>({});
+  const [teamsStats, setTeamsStats] = useState<Record<number, CategoryGroupStat[]>>({});
+  const [usersStats, setUsersStats] = useState<Record<number, CategoryGroupStat[]>>({});
 
   const toggleTeam = async (teamId: number) => {
     const alreadySelected = selectedTeamIds.includes(teamId);
@@ -24,9 +23,9 @@ export const TeamPage = () => {
       setSelectedTeamIds(ids => ids.filter(id => id !== teamId));
     } else {
       setSelectedTeamIds(ids => [...ids, teamId]);
-      if (!teamStats[teamId]) {
+      if (!teamsStats[teamId]) {
         const res = await axios.get<CategoryGroupStat[]>(`/teams/${teamId}/stats/category-groups/`);
-        setTeamStats(stats => ({ ...stats, [teamId]: res.data }));
+        setTeamsStats(stats => ({ ...stats, [teamId]: res.data }));
       }
     }
   };
@@ -37,9 +36,9 @@ export const TeamPage = () => {
       setSelectedUserIds(ids => ids.filter(id => id !== userId));
     } else {
       setSelectedUserIds(ids => [...ids, userId]);
-      if (!userStats[userId]) {
+      if (!usersStats[userId]) {
         const res = await axios.get<CategoryGroupStat[]>(`/users/${userId}/stats/category-groups/`);
-        setUserStats(stats => ({ ...stats, [userId]: res.data }));
+        setUsersStats(stats => ({ ...stats, [userId]: res.data }));
       }
     }
   };
@@ -49,7 +48,7 @@ export const TeamPage = () => {
 
     const fetchMyStats = async (id: number) => {
       const res = await axios.get<CategoryGroupStat[]>(`/users/${id}/stats/category-groups/`);
-      setUserStats(stats => ({ ...stats, [id]: res.data }));
+      setUsersStats(stats => ({ ...stats, [id]: res.data }));
     };
 
     if (me) {
@@ -111,8 +110,8 @@ export const TeamPage = () => {
         users={users}
         selectedTeamIds={selectedTeamIds}
         selectedUserIds={selectedUserIds}
-        teamStats={teamStats}
-        userStats={userStats}
+        teamsStats={teamsStats}
+        usersStats={usersStats}
       />
     </div>
   );
