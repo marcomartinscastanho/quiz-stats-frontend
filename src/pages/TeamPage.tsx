@@ -1,5 +1,5 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "../auth/axios";
 import { useAuth } from "../auth/useAuth";
 import { CategoryStatsRadarChart } from "../components/CategoryStatsRadarChart";
@@ -17,6 +17,11 @@ export const TeamPage = () => {
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<number>();
   const { categoryGroupsById } = useCategoryGroups();
+
+  const selectedCategoryIds = useMemo(() => {
+    if (!selectedGroupId) return new Set<number>();
+    return new Set(categoryGroupsById.get(selectedGroupId)?.categories.map(c => c.id) ?? []);
+  }, [selectedGroupId, categoryGroupsById]);
 
   // Fetch users
   const { data: users = [] } = useQuery<User[]>({
@@ -57,18 +62,15 @@ export const TeamPage = () => {
     })),
   });
   const teamsGroupStats = Object.fromEntries(teamsGroupStatsQueries.map((q, i) => [selectedTeamIds[i], q.data || []]));
-  const teamsCategoryStats = Object.fromEntries(
-    teamsCategoryStatsQueries.map((q, i) => [
-      selectedTeamIds[i],
-      (q.data || []).filter(
-        stat =>
-          selectedGroupId !== undefined &&
-          categoryGroupsById
-            .get(selectedGroupId)
-            ?.categories.map(c => c.id)
-            .includes(stat.category_id)
+  const teamsCategoryStats = useMemo(
+    () =>
+      Object.fromEntries(
+        teamsCategoryStatsQueries.map((q, i) => [
+          selectedTeamIds[i],
+          (q.data || []).filter(stat => selectedCategoryIds.has(stat.category_id)),
+        ])
       ),
-    ])
+    [teamsCategoryStatsQueries, selectedTeamIds, selectedCategoryIds]
   );
 
   // Fetch user stats
@@ -93,18 +95,15 @@ export const TeamPage = () => {
     })),
   });
   const usersGroupStats = Object.fromEntries(usersGroupStatsQueries.map((q, i) => [selectedUserIds[i], q.data || []]));
-  const usersCategoryStats = Object.fromEntries(
-    usersCategoryStatsQueries.map((q, i) => [
-      selectedUserIds[i],
-      (q.data || []).filter(
-        stat =>
-          selectedGroupId !== undefined &&
-          categoryGroupsById
-            .get(selectedGroupId)
-            ?.categories.map(c => c.id)
-            .includes(stat.category_id)
+  const usersCategoryStats = useMemo(
+    () =>
+      Object.fromEntries(
+        usersCategoryStatsQueries.map((q, i) => [
+          selectedUserIds[i],
+          (q.data || []).filter(stat => selectedCategoryIds.has(stat.category_id)),
+        ])
       ),
-    ])
+    [selectedCategoryIds, selectedUserIds, usersCategoryStatsQueries]
   );
 
   // Toggle functions
