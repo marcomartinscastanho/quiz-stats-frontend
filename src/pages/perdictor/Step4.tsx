@@ -114,6 +114,15 @@ export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team
     enabled: userIds.length > 0 && expandedCategoryIds.length > 0,
   });
 
+  const userColorMap = useMemo(() => {
+    const map: Record<number, string> = {};
+    users.forEach((user, index) => {
+      map[user.id] = colors[index % colors.length];
+    });
+    return map;
+  }, [users]);
+  const teamColor = colors[colors.length - 1];
+
   const datasets = useMemo(() => {
     const teamStats = teamStatsQuery.data || [];
     const userStats: Record<number, CategoryStat[]> = {};
@@ -166,6 +175,7 @@ export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team
                 title={team.name}
                 subtitle="team average"
                 isSelected={isTeamSelected}
+                selectedBgColor={teamColor}
                 onToggle={toggleTeam}
               />
               {users.map(user => {
@@ -179,6 +189,7 @@ export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team
                     isSelected={isSelected}
                     total_answers={user.total_answers}
                     aptitude={userAptitudes[user.id]}
+                    selectedBgColor={userColorMap[user.id]}
                     onToggle={toggleUser}
                   />
                 );
