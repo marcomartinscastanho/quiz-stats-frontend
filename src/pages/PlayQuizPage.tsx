@@ -118,6 +118,7 @@ export const PlayQuizPage = () => {
               ) : (
                 <div className="text-muted-foreground text-md md:text-xl font-bold text-red-700 mb-1">Time's up!</div>
               )}
+              <p className="text-xs text-muted-foreground mt-1">Decide your answer first — then check</p>
               <Button className="p-8 md:p-10 text-xl md:text-3xl" onClick={() => setReveal(true)}>
                 Show Answer
               </Button>
@@ -153,13 +154,13 @@ export const PlayQuizPage = () => {
                   className="flex-1 bg-red-600 hover:bg-red-700 text-lg md:text-3xl px-2 py-8 md:py-10"
                   onClick={() => mutation.mutate({ question: currentQuestion.id, is_correct: false })}
                 >
-                  Didn't know...
+                  I was wrong...
                 </Button>
                 <Button
                   className="flex-1 bg-green-600 hover:bg-green-700 text-lg md:text-3xl px-2 py-8 md:py-10"
                   onClick={() => mutation.mutate({ question: currentQuestion.id, is_correct: true })}
                 >
-                  I Knew It!
+                  I was right!
                 </Button>
               </div>
             </>
