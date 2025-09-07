@@ -1,7 +1,6 @@
-import { Link, Route, Routes, useNavigate } from "react-router-dom";
+import { Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { useAuth } from "./auth/useAuth";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import { Home } from "./pages/Home";
 import { Login } from "./pages/Login";
 import { NotFound } from "./pages/NotFound";
 import { PlayPage } from "./pages/PlayPage";
@@ -24,14 +23,11 @@ export const App = () => {
       <nav className="w-full bg-white shadow sticky top-0 z-10">
         <div className="max-w-[1200px] mx-auto flex justify-between items-center py-3 px-4">
           <div className="space-x-4">
-            <Link to="/" className="text-blue-600 hover:underline">
-              Home
+            <Link className="text-blue-600 hover:underline" to="/team">
+              Team
             </Link>
             <Link className="text-blue-600 hover:underline" to="/play">
               Play
-            </Link>
-            <Link className="text-blue-600 hover:underline" to="/team">
-              Team
             </Link>
             <Link className="text-blue-600 hover:underline" to="/predictor">
               Predictor
@@ -50,7 +46,7 @@ export const App = () => {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Navigate to="/team" replace />} />
             <Route path="/play" element={<PlayPage />} />
             <Route path="/play/:quizId" element={<PlayQuizPage />} />
             <Route path="/team" element={<TeamPage />} />
