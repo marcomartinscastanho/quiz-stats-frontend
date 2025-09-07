@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import axios from "../../auth/axios";
-import { Button } from "../../components/ui/Button";
+import { Button } from "../../components/ui/button/Button";
 import { Textarea } from "../../components/ui/Textarea";
 import type { CategorizeResponse } from "../../types/api";
 

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import Select from "react-select";
 import axios from "../../auth/axios";
-import { Button } from "../../components/ui/Button";
+import { Button } from "../../components/ui/button/Button";
 import type { Team, User } from "../../types/user";
 
 type Props = {

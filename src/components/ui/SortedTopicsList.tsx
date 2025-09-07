@@ -8,7 +8,7 @@ type Props = {
 
 export const SortedTopicsList: FC<Props> = ({ label, topics }) => {
   return (
-    <div className="flex-1 border rounded-lg">
+    <div className="flex-1 border rounded">
       <div className="flex flex-row justify-between gap-2 font-semibold border-b px-2 py-1">
         <span>{label}</span>
         xT

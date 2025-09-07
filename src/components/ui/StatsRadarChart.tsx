@@ -1,13 +1,4 @@
-import {
-  Legend,
-  PolarAngleAxis,
-  PolarGrid,
-  PolarRadiusAxis,
-  Radar,
-  RadarChart,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
+import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer, Tooltip } from "recharts";
 
 type Dataset<T> = {
   label: string;
@@ -57,7 +48,6 @@ export function GenericStatsRadarChart<T extends Record<string, string | number>
             />
           ))}
           <Tooltip />
-          <Legend />
         </RadarChart>
       </ResponsiveContainer>
     </div>

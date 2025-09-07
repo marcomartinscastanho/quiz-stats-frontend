@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "../auth/axios";
 import { useAuth } from "../auth/useAuth";
 import { GroupStatsRadarChart } from "../components/GroupStatsRadarChart";
@@ -66,15 +66,31 @@ export const TeamPage = () => {
     fetchUsersAndMyTeams();
   }, []);
 
+  const teamColors = useMemo(() => {
+    const map: Record<number, string> = {};
+    teams.forEach((team, index) => {
+      map[team.id] = colors.slice().reverse()[index % colors.length];
+    });
+    return map;
+  }, [teams]);
+
+  const userColors = useMemo(() => {
+    const map: Record<number, string> = {};
+    users.forEach((user, index) => {
+      map[user.id] = colors[index % colors.length];
+    });
+    return map;
+  }, [users]);
+
   const datasets = [
-    ...selectedTeamIds.map((id, index) => ({
+    ...selectedTeamIds.map(id => ({
       label: teams.find(t => t.id === id)?.name || `Team ${id}`,
-      color: colors.slice().reverse()[index % colors.length],
+      color: teamColors[id],
       data: teamStats[id] || [],
     })),
-    ...selectedUserIds.map((id, index) => ({
+    ...selectedUserIds.map(id => ({
       label: users.find(u => u.id === id)?.username || `User ${id}`,
-      color: colors[index % colors.length],
+      color: userColors[id],
       data: userStats[id] || [],
     })),
   ];
@@ -91,6 +107,7 @@ export const TeamPage = () => {
                 title={team.name}
                 subtitle="team average"
                 isSelected={isTeamSelected}
+                selectedBgColor={teamColors[team.id]}
                 onToggle={toggleTeam}
               />
               {team.users.map(user => {
@@ -103,6 +120,7 @@ export const TeamPage = () => {
                     subtitle={user.username}
                     isSelected={isSelected}
                     total_answers={user.total_answers}
+                    selectedBgColor={userColors[user.id]}
                     onToggle={toggleUser}
                   />
                 );
