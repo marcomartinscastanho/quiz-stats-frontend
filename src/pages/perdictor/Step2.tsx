@@ -1,10 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import axios from "../../auth/axios";
 import { Button } from "../../components/ui/button/Button";
 import { TopicsCategories } from "../../components/ui/TopicsCategories";
+import { useCategoryGroups } from "../../lib/useCategoryGroups";
 import type { CategorizedTopic } from "../../types/api";
-import type { CategoryGroup } from "../../types/categories";
 
 type Props = {
   firstHalfTopics: CategorizedTopic[];
@@ -23,13 +21,7 @@ export const Step2: React.FC<Props> = ({
   onNext,
   onPrev,
 }) => {
-  const { data: categoryGroups } = useQuery<CategoryGroup[]>({
-    queryKey: ["category-groups"],
-    queryFn: async () => {
-      const res = await axios.get("/quizzes/categories/groups/");
-      return res.data;
-    },
-  });
+  const { categoryGroups } = useCategoryGroups();
 
   const groupedCategoryOptions = useMemo(() => {
     if (!categoryGroups) return [];

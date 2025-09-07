@@ -21,4 +21,10 @@ export const colors = [
   "#607D8B", // blue gray
   "#9C27B0", // deep purple
   "#E91E63", // hot pink
+  // Dark / muted colors
+  "#333333", // charcoal
+  "#4B3B3B", // muted brown
+  "#3B2F2F", // dark brown
+  "#2E2E2E", // dark gray
+  "#1A1A1A", // blackish
 ];

@@ -1,4 +1,5 @@
 import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer, Tooltip } from "recharts";
+import type { TickItem } from "recharts/types/util/types";
 
 type Dataset<T> = {
   label: string;
@@ -11,6 +12,7 @@ type Props<T> = {
   dataKey: keyof T;
   valueKey: keyof T;
   height?: string;
+  onLabelClick?: (tick: TickItem) => void;
 };
 
 export function GenericStatsRadarChart<T extends Record<string, string | number>>({
@@ -18,6 +20,7 @@ export function GenericStatsRadarChart<T extends Record<string, string | number>
   dataKey,
   valueKey,
   height = "h-[250px] sm:h-[600px]",
+  onLabelClick,
 }: Props<T>) {
   const labels = Array.from(new Set(datasets.flatMap(ds => ds.data.map(item => item[dataKey]))));
 
@@ -35,7 +38,7 @@ export function GenericStatsRadarChart<T extends Record<string, string | number>
       <ResponsiveContainer>
         <RadarChart cx="50%" cy="50%" outerRadius="80%" data={mergedData}>
           <PolarGrid />
-          <PolarAngleAxis dataKey={String(dataKey)} />
+          <PolarAngleAxis dataKey={String(dataKey)} onClick={onLabelClick}></PolarAngleAxis>
           <PolarRadiusAxis />
           {datasets.map(ds => (
             <Radar

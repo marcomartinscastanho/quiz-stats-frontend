@@ -1,99 +1,124 @@
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import axios from "../auth/axios";
 import { useAuth } from "../auth/useAuth";
+import { CategoryStatsRadarChart } from "../components/CategoryStatsRadarChart";
 import { GroupStatsRadarChart } from "../components/GroupStatsRadarChart";
+import { Button } from "../components/ui/button/Button";
 import { StatToggle } from "../components/ui/StatToggle";
-import { colors } from "../constants";
-import type { CategoryGroupStat } from "../types/categories";
+import { useCategoryGroups } from "../lib/useCategoryGroups";
+import { useChartColors } from "../lib/useChartColours";
+import type { CategoryGroupStat, CategoryStat } from "../types/categories";
 import type { Team, User } from "../types/user";
 
 export const TeamPage = () => {
   const { user: me } = useAuth();
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
   const [selectedTeamIds, setSelectedTeamIds] = useState<number[]>([]);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
-  const [teamStats, setTeamStats] = useState<Record<number, CategoryGroupStat[]>>({});
-  const [userStats, setUserStats] = useState<Record<number, CategoryGroupStat[]>>({});
+  const [selectedGroupId, setSelectedGroupId] = useState<number>();
+  const { categoryGroupsById } = useCategoryGroups();
 
-  const toggleTeam = async (teamId: number) => {
-    const alreadySelected = selectedTeamIds.includes(teamId);
-    if (alreadySelected) {
-      setSelectedTeamIds(ids => ids.filter(id => id !== teamId));
-    } else {
-      setSelectedTeamIds(ids => [...ids, teamId]);
-      if (!teamStats[teamId]) {
-        const res = await axios.get<CategoryGroupStat[]>(`/teams/${teamId}/stats/category-groups/`);
-        setTeamStats(stats => ({ ...stats, [teamId]: res.data }));
-      }
-    }
+  const selectedCategoryIds = useMemo(() => {
+    if (!selectedGroupId) return new Set<number>();
+    return new Set(categoryGroupsById.get(selectedGroupId)?.categories.map(c => c.id) ?? []);
+  }, [selectedGroupId, categoryGroupsById]);
+
+  // Fetch users
+  const { data: users = [] } = useQuery<User[]>({
+    queryKey: ["users"],
+    queryFn: () => axios.get("/users/").then(res => res.data),
+    enabled: !!me,
+  });
+
+  // Fetch my teams
+  const { data: teams = [] } = useQuery<Team[]>({
+    queryKey: ["myTeams"],
+    queryFn: () => axios.get("/users/me/teams/").then(res => res.data),
+    enabled: !!me,
+  });
+
+  // Chart colors
+  const { teamColors, userColors } = useChartColors(teams, users);
+
+  // Fetch team stats
+  const fetchTeamGroupStats = (teamId: number) =>
+    axios.get<CategoryGroupStat[]>(`/teams/${teamId}/stats/category-groups/`).then(res => res.data);
+  const fetchTeamCategoryStats = (teamId: number) =>
+    axios.get<CategoryStat[]>(`/teams/${teamId}/stats/categories/`).then(res => res.data);
+  const teamsGroupStatsQueries = useQueries({
+    queries: selectedTeamIds.map(teamId => ({
+      queryKey: ["teamsGroupStats", teamId],
+      queryFn: () => fetchTeamGroupStats(teamId),
+      enabled: selectedTeamIds.includes(teamId),
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+  const teamsCategoryStatsQueries = useQueries({
+    queries: selectedTeamIds.map(teamId => ({
+      queryKey: ["teamsCategoryStats", teamId],
+      queryFn: () => fetchTeamCategoryStats(teamId),
+      enabled: selectedGroupId !== undefined && selectedTeamIds.includes(teamId),
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+  const teamsGroupStats = Object.fromEntries(teamsGroupStatsQueries.map((q, i) => [selectedTeamIds[i], q.data || []]));
+  const teamsCategoryStats = useMemo(
+    () =>
+      Object.fromEntries(
+        teamsCategoryStatsQueries.map((q, i) => [
+          selectedTeamIds[i],
+          (q.data || []).filter(stat => selectedCategoryIds.has(stat.category_id)),
+        ])
+      ),
+    [teamsCategoryStatsQueries, selectedTeamIds, selectedCategoryIds]
+  );
+
+  // Fetch user stats
+  const fetchUserGroupStats = (userId: number) =>
+    axios.get<CategoryGroupStat[]>(`/users/${userId}/stats/category-groups/`).then(res => res.data);
+  const fetchUserCategoryStats = (userId: number) =>
+    axios.get<CategoryStat[]>(`/users/${userId}/stats/categories/`).then(res => res.data);
+  const usersGroupStatsQueries = useQueries({
+    queries: selectedUserIds.map(userId => ({
+      queryKey: ["usersGroupStats", userId],
+      queryFn: () => fetchUserGroupStats(userId),
+      enabled: selectedUserIds.includes(userId),
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+  const usersCategoryStatsQueries = useQueries({
+    queries: selectedUserIds.map(userId => ({
+      queryKey: ["usersCategoryStats", userId],
+      queryFn: () => fetchUserCategoryStats(userId),
+      enabled: selectedGroupId !== undefined && selectedUserIds.includes(userId),
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+  const usersGroupStats = Object.fromEntries(usersGroupStatsQueries.map((q, i) => [selectedUserIds[i], q.data || []]));
+  const usersCategoryStats = useMemo(
+    () =>
+      Object.fromEntries(
+        usersCategoryStatsQueries.map((q, i) => [
+          selectedUserIds[i],
+          (q.data || []).filter(stat => selectedCategoryIds.has(stat.category_id)),
+        ])
+      ),
+    [selectedCategoryIds, selectedUserIds, usersCategoryStatsQueries]
+  );
+
+  // Toggle functions
+  const toggleTeam = (teamId: number) => {
+    setSelectedTeamIds(ids => (ids.includes(teamId) ? ids.filter(id => id !== teamId) : [...ids, teamId]));
   };
-
-  const toggleUser = async (userId: number) => {
-    const alreadySelected = selectedUserIds.includes(userId);
-    if (alreadySelected) {
-      setSelectedUserIds(ids => ids.filter(id => id !== userId));
-    } else {
-      setSelectedUserIds(ids => [...ids, userId]);
-      if (!userStats[userId]) {
-        const res = await axios.get<CategoryGroupStat[]>(`/users/${userId}/stats/category-groups/`);
-        setUserStats(stats => ({ ...stats, [userId]: res.data }));
-      }
-    }
+  const toggleUser = (userId: number) => {
+    setSelectedUserIds(ids => (ids.includes(userId) ? ids.filter(id => id !== userId) : [...ids, userId]));
   };
 
   useEffect(() => {
-    const fetchMyStats = async (id: number) => {
-      const res = await axios.get<CategoryGroupStat[]>(`/users/${id}/stats/category-groups/`);
-      setUserStats(stats => ({ ...stats, [id]: res.data }));
-    };
-
     if (me) {
       setSelectedUserIds(ids => (ids.includes(me.id) ? ids : [...ids, me.id]));
-      fetchMyStats(me.id);
     }
   }, [me]);
-
-  useEffect(() => {
-    const fetchUsersAndMyTeams = async () => {
-      const [usersRes, myTeamsRes] = await Promise.all([
-        axios.get<User[]>("/users/"),
-        axios.get<Team[]>("/users/me/teams/"),
-      ]);
-      setUsers(usersRes.data);
-      setTeams(myTeamsRes.data);
-    };
-    fetchUsersAndMyTeams();
-  }, []);
-
-  const teamColors = useMemo(() => {
-    const map: Record<number, string> = {};
-    teams.forEach((team, index) => {
-      map[team.id] = colors.slice().reverse()[index % colors.length];
-    });
-    return map;
-  }, [teams]);
-
-  const userColors = useMemo(() => {
-    const map: Record<number, string> = {};
-    users.forEach((user, index) => {
-      map[user.id] = colors[index % colors.length];
-    });
-    return map;
-  }, [users]);
-
-  const datasets = [
-    ...selectedTeamIds.map(id => ({
-      label: teams.find(t => t.id === id)?.name || `Team ${id}`,
-      color: teamColors[id],
-      data: teamStats[id] || [],
-    })),
-    ...selectedUserIds.map(id => ({
-      label: users.find(u => u.id === id)?.username || `User ${id}`,
-      color: userColors[id],
-      data: userStats[id] || [],
-    })),
-  ];
 
   return (
     <div className="flex flex-col md:flex-row gap-6">
@@ -129,7 +154,33 @@ export const TeamPage = () => {
           );
         })}
       </div>
-      <GroupStatsRadarChart datasets={datasets} />
+      <div className="flex flex-col flex-1">
+        {selectedGroupId === undefined ? (
+          <GroupStatsRadarChart
+            teams={teams}
+            users={users}
+            selectedTeamIds={selectedTeamIds}
+            selectedUserIds={selectedUserIds}
+            teamsStats={teamsGroupStats}
+            usersStats={usersGroupStats}
+            onGroupClick={id => setSelectedGroupId(id)}
+          />
+        ) : (
+          <>
+            <CategoryStatsRadarChart
+              teams={teams}
+              users={users}
+              selectedTeamIds={selectedTeamIds}
+              selectedUserIds={selectedUserIds}
+              teamsStats={teamsCategoryStats}
+              usersStats={usersCategoryStats}
+            />
+            <Button variant="secondary" onClick={() => setSelectedGroupId(undefined)}>
+              Back
+            </Button>
+          </>
+        )}
+      </div>
     </div>
   );
 };

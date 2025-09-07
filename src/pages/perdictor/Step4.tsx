@@ -8,7 +8,7 @@ import { ReviewModeRadioButton } from "../../components/ui/ReviewModeRadioButton
 import { SortedTopics } from "../../components/ui/SortedTopics";
 import { StatToggle } from "../../components/ui/StatToggle";
 import { TopicsReview } from "../../components/ui/TopicsReview";
-import { colors } from "../../constants";
+import { useChartColors } from "../../lib/useChartColours";
 import { flattenCategories, sortCategoryStats } from "../../lib/utils";
 import type { CategorizedTopic } from "../../types/api";
 import type { CategoryStat, CategorySummary } from "../../types/categories";
@@ -30,6 +30,7 @@ type Props = {
 };
 
 export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team, users, onPrev }) => {
+  const { teamColors, userColors } = useChartColors(team ? [team] : [], users);
   const [isTeamSelected, setIsTeamSelected] = useState<boolean>(false);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>(users.map(u => u.id));
   const [reviewMode, setReviewMode] = useState<"categories" | "topics">("categories");
@@ -114,43 +115,16 @@ export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team
     enabled: userIds.length > 0 && expandedCategoryIds.length > 0,
   });
 
-  const userColorMap = useMemo(() => {
-    const map: Record<number, string> = {};
-    users.forEach((user, index) => {
-      map[user.id] = colors[index % colors.length];
-    });
-    return map;
-  }, [users]);
-  const teamColor = colors[colors.length - 1];
-
-  const datasets = useMemo(() => {
-    const teamStats = teamStatsQuery.data || [];
-    const userStats: Record<number, CategoryStat[]> = {};
-    selectedUserIds.forEach((id, index) => {
-      userStats[id] = userStatsQueries[index]?.data || [];
-    });
-    const selectedUsers = team ? team.users.filter(u => selectedUserIds.includes(u.id)) : [];
-    const data: DataSet[] = [];
-    if (isTeamSelected && !!team) {
-      data.push({
-        label: team.name,
-        color: colors[-1],
-        data: teamStats,
-      });
-    }
-    data.push(
-      ...selectedUsers.map(user => {
-        const userIndex = users.findIndex(u => u.id === user.id); // stable index
-        const stats = userStats[user.id] || [];
-        return {
-          label: user.username,
-          color: colors[userIndex % colors.length],
-          data: stats,
-        };
-      })
-    );
-    return data;
-  }, [isTeamSelected, selectedUserIds, team, teamStatsQuery.data, userStatsQueries, users]);
+  const teams = useMemo(() => (team && isTeamSelected ? [team] : []), [isTeamSelected, team]);
+  const selectedTeamIds = useMemo(() => teams.map(t => t.id), [teams]);
+  const teamsStats = useMemo(
+    () => Object.fromEntries(selectedTeamIds.map(id => [id, teamStatsQuery.data || []])),
+    [selectedTeamIds, teamStatsQuery.data]
+  );
+  const usersStats = useMemo(
+    () => Object.fromEntries(selectedUserIds.map((id, index) => [id, userStatsQueries[index]?.data || []])),
+    [selectedUserIds, userStatsQueries]
+  );
 
   const userAptitudes = userAptitudesQuery.data || {};
 
@@ -167,7 +141,14 @@ export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team
           )}
         </div>
         <div className="flex-5">
-          <CategoryStatsRadarChart datasets={datasets} />
+          <CategoryStatsRadarChart
+            teams={teams}
+            users={users}
+            selectedTeamIds={selectedTeamIds}
+            selectedUserIds={selectedUserIds}
+            teamsStats={teamsStats}
+            usersStats={usersStats}
+          />
           {!!team && (
             <div key={team.id} className="flex flex-row gap-1">
               <StatToggle
@@ -175,7 +156,7 @@ export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team
                 title={team.name}
                 subtitle="team average"
                 isSelected={isTeamSelected}
-                selectedBgColor={teamColor}
+                selectedBgColor={teamColors[team.id]}
                 onToggle={toggleTeam}
               />
               {users.map(user => {
@@ -189,7 +170,7 @@ export const Step4: React.FC<Props> = ({ firstHalfTopics, secondHalfTopics, team
                     isSelected={isSelected}
                     total_answers={user.total_answers}
                     aptitude={userAptitudes[user.id]}
-                    selectedBgColor={userColorMap[user.id]}
+                    selectedBgColor={userColors[user.id]}
                     onToggle={toggleUser}
                   />
                 );
