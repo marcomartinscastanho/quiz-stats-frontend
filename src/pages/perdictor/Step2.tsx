@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import axios from "../../auth/axios";
-import { Button } from "../../components/ui/Button";
+import { Button } from "../../components/ui/button/Button";
 import { TopicsCategories } from "../../components/ui/TopicsCategories";
 import type { CategorizedTopic } from "../../types/api";
 import type { CategoryGroup } from "../../types/categories";

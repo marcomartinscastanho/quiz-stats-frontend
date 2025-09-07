@@ -1,6 +1,8 @@
-import { Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { useAuth } from "./auth/useAuth";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { NavLink } from "./components/ui/NavLink";
+import { LogoutButton } from "./components/ui/button/LogoutButton";
 import { Login } from "./pages/Login";
 import { NotFound } from "./pages/NotFound";
 import { PlayPage } from "./pages/PlayPage";
@@ -21,23 +23,13 @@ export const App = () => {
     <div className="flex flex-col min-h-dvh">
       {/* 🧭 Top Nav */}
       <nav className="w-full bg-white shadow sticky top-0 z-10">
-        <div className="max-w-[1200px] mx-auto flex justify-between items-center py-3 px-4">
-          <div className="space-x-4">
-            <Link className="text-blue-600 hover:underline" to="/team">
-              Team
-            </Link>
-            <Link className="text-blue-600 hover:underline" to="/play">
-              Play
-            </Link>
-            <Link className="text-blue-600 hover:underline" to="/predictor">
-              Predictor
-            </Link>
+        <div className="max-w-[1200px] mx-auto flex justify-between items-center h-12">
+          <div className="flex h-full">
+            <NavLink to="/team" label="Team" />
+            <NavLink to="/play" label="Play" />
+            <NavLink to="/predictor" label="Predictor" />
           </div>
-          {accessToken && (
-            <button onClick={handleLogout} className="text-sm text-white bg-red-500 px-3 py-1 rounded hover:bg-red-600">
-              Logout
-            </button>
-          )}
+          {accessToken && <LogoutButton onCLick={handleLogout} />}
         </div>
       </nav>
 

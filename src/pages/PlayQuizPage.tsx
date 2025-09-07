@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import Select from "react-select";
 import axios from "../auth/axios";
-import { Button } from "../components/ui/Button";
+import { Button } from "../components/ui/button/Button";
 import { Card, CardContent } from "../components/ui/Card";
 import { estimateReadingTime, formatTime } from "../lib/utils";
 import type { CategoryGroup } from "../types/categories";

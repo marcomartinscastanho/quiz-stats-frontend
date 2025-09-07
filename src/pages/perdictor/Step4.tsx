@@ -2,7 +2,7 @@ import { useQueries, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import axios from "../../auth/axios";
 import { CategoryStatsRadarChart } from "../../components/CategoryStatsRadarChart";
-import { Button } from "../../components/ui/Button";
+import { Button } from "../../components/ui/button/Button";
 import { CategoriesReview } from "../../components/ui/CategoriesReview";
 import { ReviewModeRadioButton } from "../../components/ui/ReviewModeRadioButton";
 import { SortedTopics } from "../../components/ui/SortedTopics";
